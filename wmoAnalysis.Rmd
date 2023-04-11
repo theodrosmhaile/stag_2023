@@ -1,0 +1,239 @@
+---
+title: "WMO Analysis"
+author: "Theodros H."
+date: "8/6/2022"
+output: 
+  html_document:
+    code_folding: hide
+    toc: true
+editor_options: 
+  chunk_output_type: console
+---
+
+WMO Analysis
+There are 8 blocks of set size 3 trials and 6 blocks of set size 6 trials per participant for a total of 14 blocks
+```{r}
+#start up
+rm(list = ls())
+library(matlab)
+library(tidyverse)
+library(ggpubr)
+library(magrittr)
+knitr::opts_chunk$set(
+  comment = FALSE, echo = FALSE, warning = FALSE, 
+  message = FALSE 
+ )
+
+```
+Import data and set variables
+```{r}
+
+# <- "/Volumes/GoogleDrive/My Drive/CCDL Shared/Shared/Teddy/winter_19_subjectpool_data/"
+#setwd('/Volumes/GoogleDrive/My Drive/CCDL Shared/Shared/Teddy/winter_19_subjectpool_data')
+
+#Import data
+wmodata <- read_delim('./processed_wmo/wmo_subjects_across_studies_learn_031820.csv') 
+wmotestdata<- read_delim('./processed_wmo/wmo_subjects_across_studies_test_031820.csv') 
+model.dat <- read_csv('RMSE_fit_model_dat_07_2022.csv')
+model.dat %<>% mutate(subject=subjects,.keep='unused') 
+load('image_naming_outcomes.RData')
+
+#wmodata <- read.csv('./Processed/wmo_trainingAllParticipants.txt') 
+Training.blocks <- c(3,6,3,3,6,3,6,6,3,3,6,3,6,3) #from data
+
+## Stimuli sets for each block: 
+#[3 6 7 2 5 17 18 13 14 10 9 12 11 15]
+
+ stim.items =  c("utensils", "colors", "sports" , "veggies",
+                 "shapes","rooms", "plants", "fruits","landscapes","animals",
+                 "tools", 'vehicles', "instruments", "clothes")
+block.3 <- which(Training.blocks==3)
+block.6 <- which(Training.blocks==6)
+#logical indices
+ns3 <- wmodata$trial==39
+ns6 <- wmodata$trial==78
+#variable declaration as determined by saved data
+wmo.N.trials <- 780 
+ns3.blks <- 8 
+ns6.blks <- 6
+ns3.n <- 3
+ns6.n <- 6
+#maintain a universal list of participants
+#Subs <- unique(wmodata$subject)#this will change
+Subjects <- unique(wmodata$subject)
+# Subjects <- as.matrix(read.csv(
+#   paste(dataPath,"winter19STAGSubjects.csv",sep = ""),
+#   header = FALSE))
+
+```
+
+### Explanation of variables
+ - trial is set-size
+ - acc is accuracy
+ - seq is image identifier
+ - Code is correct response
+ 
+```{r block analysis, fig.height=6, fig.width=14}
+blk.order=c(1,9,2,3,10,4,11,12,5,6,13,7,14,8)
+
+
+## These category names are not present in the Collins task data, just a number signifying the folder stimuli came from,  so I had to name each one with the category name
+wmo.mod <- 
+  wmodata %>% 
+  mutate('block' =  rep(
+    c(rep('s3_1_kitchenware', 13*3), rep('s6_1_colors', 13*6),rep('s3_2_sports', 13*3) ,rep('s3_3_veggies', 13*3),
+      rep('s6_2_shapes', 13*6),rep('s3_4_rooms', 13*3),rep('s6_3_plants', 13*6),rep('s6_4_fruits', 13*6),
+      rep('s3_5_places', 13*3), rep('s3_6_animals', 13*3),rep('s6_5_tools', 13*6),rep('s3_7_vehicles', 13*3),rep('s6_6_instruments', 13*6),
+      rep('s3_8_clothes', 13*3)
+    ), length(unique(wmodata$subject))),
+    condition= rep(
+    c(rep('s3', 13*3), rep('s6', 13*6),rep('s3', 13*3) ,rep('s3', 13*3),
+      rep('s6', 13*6),rep('s3', 13*3),rep('s6', 13*6),rep('s6', 13*6),
+      rep('s3', 13*3), rep('s3', 13*3),rep('s6', 13*6),rep('s3', 13*3),rep('s6', 13*6),
+      rep('s3', 13*3)
+    ), length(unique(wmodata$subject))),
+    'category' = rep(
+    c(rep('Kitchenware', 13*3), rep('Colors', 13*6),rep('Sports', 13*3) ,rep('Vegetables', 13*3),
+      rep('Shapes', 13*6),rep('Rooms', 13*3),rep('Plants', 13*6),rep('Fruit', 13*6),
+      rep('Places', 13*3), rep('Animals', 13*3),rep('Tools', 13*6),rep('Vehicles', 13*3),rep('Instruments', 13*6),
+      rep('Clothing', 13*3)
+    ), length(unique(wmodata$subject)))
+    
+  ) %>% 
+  arrange(subject, block, seq) %>% 
+  mutate('iteration' = rep(rep(1:13, 60),
+                       length(unique(wmodata$subject)))
+         )
+  
+
+
+wmo.mod %>% 
+ # filter(subject<1620) %>% 
+dplyr::group_by( block, category, iteration, condition) %>% 
+  summarize(mean=mean(acc), 
+            se=sd(acc)/sqrt(length(acc))) %>%
+
+  ggplot(aes(x=iteration, y=mean, group=block, color=block)) +
+# geom_boxplot()+
+  geom_point() +
+ #geom_smooth(method  = 'lm',formula = 'y~poly(x,2)', se=F)+
+  geom_line() +
+  geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=.35, size=1)+
+ ylim(c(0, 1.))+
+  facet_wrap(vars(condition)) +
+  viridis::scale_color_viridis(discrete = TRUE, option = 'D')+
+  #facet_wrap(vars(block))+
+#theme(legend.position = 'none')+
+theme_classic(base_size = 20) 
+  
+
+# 
+# 'iteration' = rep(rep(1:13, 60),
+#                       length(unique(wmodata$subject)))
+```
+ 
+```{r correlation with Naming frequency}
+
+acc_freq_dat <- 
+  wmo.mod %>% 
+ filter(iteration>5 & iteration <13) %>% 
+group_by(block, category, iteration) %>% 
+  summarize(m.acc=mean(acc), 
+            se=sd(acc)/sqrt(length(acc))) %>% 
+  ungroup %>% 
+  inner_join(optimalresp_freq, by='category') %>% 
+  group_by(block, category) %>% 
+  summarise(mean.prop = mean(proportion), 
+            mean.acc=mean(m.acc)) %>% 
+  ungroup()
+
+  acc_freq_dat %$% cor.test(mean.prop, mean.acc, method = 'pearson') %>% 
+    broom::tidy() %>% 
+    knitr::kable()
+
+acc_freq_dat %>% 
+  ggplot(aes(x=mean.acc, y=mean.prop) ) +
+  geom_point(size=6, alpha=.8, color='orange') +
+  geom_smooth(method = 'lm', color='red', alpha=.2) +
+  geom_text(aes(label=block), check_overlap = T, nudge_y = .01) +
+  xlab('Learning accuracy')+
+  ylab('Optimal name proportion')+
+  theme_classic(base_size = 18) 
+ # coord_cartesian(xlim = c(0.3, 1), ylim = c(0.3, 1))
+  #,coord_equal()
+  
+  
+```
+
+```{r correlation with Naming response variability}
+acc_variability_dat <- 
+  wmo.mod %>% 
+ # filter(subject<1620) %>% 
+group_by(block, category, iteration) %>% 
+  summarize(m.acc=mean(acc), 
+            se=sd(acc)/sqrt(length(acc))) %>% 
+  ungroup %>% 
+  inner_join(response_diversity, by='category') %>% 
+  group_by(block, category) %>% 
+  summarise(mean.unique = mean(resp_unique), 
+            mean.acc=mean(m.acc)) %>% 
+  ungroup()
+
+  acc_variability_dat %$% cor.test(mean.unique, mean.acc, method = 'pearson') %>% 
+    broom::tidy() %>% 
+     knitr::kable()
+
+
+acc_variability_dat %>% 
+  ggplot(aes(x=mean.acc, y=mean.unique) ) +
+  geom_point(size=6, alpha=.4, color='orange') +
+  geom_smooth(method = 'lm', alpha=.2, color='red') +
+  geom_text(aes(label=block), check_overlap = T, nudge_y = .01) +
+  theme_classic(base_size = 18) 
+ # coord_cartesian(xlim = c(0.3, 1), ylim = c(0.3, 1))
+  #,coord_equal()
+  
+```
+ 
+```{r export reaction time data}
+wmodata %>% 
+  dplyr::mutate(
+   condition= rep(
+    c(rep('s3', 13*3), rep('s6', 13*6),rep('s3', 13*3) ,rep('s3', 13*3),
+      rep('s6', 13*6),rep('s3', 13*3),rep('s6', 13*6),rep('s6', 13*6),
+      rep('s3', 13*3), rep('s3', 13*3),rep('s6', 13*6),rep('s3', 13*3),rep('s6', 13*6),
+      rep('s3', 13*3)
+    ), length(unique(wmodata$subject)))) %>% 
+  arrange(subject, condition, seq) %>% 
+  mutate('iteration' = rep(rep(1:13, 60),
+                       length(unique(wmodata$subject))), 
+         'half' = rep(c(rep('half1',(30 * 13)),rep('half2',(30*13))),
+                    length(unique(wmodata$subject)))
+         ) %>% 
+  filter(subject==6200) %>% 
+  #filter(acc!=-1) %>% 
+  dplyr::group_by(half,condition, iteration) %>% 
+  dplyr::summarise(mean.acc = mean(acc), 
+                   n=length(acc), 
+                   mean.RT = mean(RT)) %>% View
+  ggplot(aes(x=iteration,y= mean.RT, group=condition, color=condition)) +
+  geom_point() +
+  geom_line() +
+  facet_wrap(vars(half))+
+  ylim(c(0.3,1))
+  
+
+
+filter(acc!=-1) %>% 
+  dplyr::group_by(subject,trial, acc) %>% 
+  
+  dplyr::summarise(mean=mean(RT), 
+                   n=length(RT)) %>% 
+  ggplot(aes(y=mean,x=as.factor(trial), color=as.factor(acc)))+ #x=as.factor(acc))) +
+ # geom_point() +
+  geom_violin()#+
+  #facet_wrap(vars(trial))
+
+```
+ 
+ 
