@@ -1,52 +1,30 @@
 ---
 title: "WMO Analysis"
 author: "Theodros H."
-date: "8/6/2022"
+date: "3/6/2019"
 output: 
   html_document:
     code_folding: hide
-    toc: true
-editor_options: 
-  chunk_output_type: console
 ---
-
+#EXCLUDED 625
 WMO Analysis
 There are 8 blocks of set size 3 trials and 6 blocks of set size 6 trials per participant for a total of 14 blocks
-```{r}
-#start up
+```{r start up, echo=FALSE, message=FALSE, warning=FALSE}
+#
 rm(list = ls())
 library(matlab)
 library(tidyverse)
-library(ggpubr)
-library(magrittr)
-knitr::opts_chunk$set(
-  comment = FALSE, echo = FALSE, warning = FALSE, 
-  message = FALSE 
- )
 
 ```
 Import data and set variables
 ```{r}
 
-# <- "/Volumes/GoogleDrive/My Drive/CCDL Shared/Shared/Teddy/winter_19_subjectpool_data/"
-#setwd('/Volumes/GoogleDrive/My Drive/CCDL Shared/Shared/Teddy/winter_19_subjectpool_data')
-
 #Import data
-wmodata <- read_delim('./processed_wmo/wmo_subjects_across_studies_learn_031820.csv') 
-wmotestdata<- read_delim('./processed_wmo/wmo_subjects_across_studies_test_031820.csv') 
-model.dat <- read_csv('RMSE_fit_model_dat_07_2022.csv')
-model.dat %<>% mutate(subject=subjects,.keep='unused') 
-load('image_naming_outcomes.RData')
+wmodata     <- read.csv('./processed_data//wmo_training_2023.txt') 
+wmotestdata <- read.csv('./processed_data//wmo_test_2023.txt') 
 
-#wmodata <- read.csv('./Processed/wmo_trainingAllParticipants.txt') 
+
 Training.blocks <- c(3,6,3,3,6,3,6,6,3,3,6,3,6,3) #from data
-
-## Stimuli sets for each block: 
-#[3 6 7 2 5 17 18 13 14 10 9 12 11 15]
-
- stim.items =  c("utensils", "colors", "sports" , "veggies",
-                 "shapes","rooms", "plants", "fruits","landscapes","animals",
-                 "tools", 'vehicles', "instruments", "clothes")
 block.3 <- which(Training.blocks==3)
 block.6 <- which(Training.blocks==6)
 #logical indices
@@ -60,180 +38,157 @@ ns3.n <- 3
 ns6.n <- 6
 #maintain a universal list of participants
 #Subs <- unique(wmodata$subject)#this will change
-Subjects <- unique(wmodata$subject)
-# Subjects <- as.matrix(read.csv(
-#   paste(dataPath,"winter19STAGSubjects.csv",sep = ""),
-#   header = FALSE))
+
+Subjects <- as.matrix(read.csv('stag_2023_subjects.csv',header = FALSE))
+
+# excluded subjects 
+# ---- 7532 don't know why yet
+ Subjects[33]=0
+```
+ 
+This block performs the learning/accuracy curve: acc by item`r ns6` iteration  
+
+#### NOTE: plot titles are: ID number / fit coefficient for set 3 / fit coefficient for set 6 
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+i=1
+mean.acc.3 <- c()
+mean.acc.6 <- c() 
+wmo.s <- c()
+Missing.p <- c()
+learningRate.3 <- c()
+learningRate.6 <- c()
+#Subjects=7515
+#iterate through each subject here:
+for (s in Subjects) {
+OneSub <- wmodata$subject == s  
+if(any(OneSub)==1){
+
+#rehsape script here: this reshapes response vector in to trial x block
+#use these to find the trials
+temp.sort.3 <- reshape(as.matrix(wmodata$seq[OneSub & ns3]),39,ns3.blks)
+temp.sort.6 <- reshape(as.matrix(wmodata$seq[OneSub & ns6]),78,ns6.blks)
+#these are the actual data. 
+temp.dat.3 <- reshape(as.matrix(wmodata$acc[OneSub & ns3]),39, ns3.blks)
+temp.dat.6 <- reshape(as.matrix(wmodata$acc[OneSub & ns6]),78, ns6.blks)
+#iterate through blocks here:
+temp.cat.3 <- c()
+temp.cat.6 <- c()
+
+for (n in 1:ns3.blks) {
+  #iterate through items here
+ #temp.cat.3<- cbind(temp.cat.3,reshape(as.matrix(sort(temp.sort.3[,n])),13,3)) #accumulates across blocks
+ 
+  temp.cat.3<-cbind(temp.cat.3,cbind(as.matrix(temp.dat.3[temp.sort.3[,n]==1,n][1:12]),
+                                     as.matrix(temp.dat.3[temp.sort.3[,n]==2,n][1:12]),
+                                      as.matrix(temp.dat.3[temp.sort.3[,n]==3,n][1:12])
+                                     )
+                    )
+   if(TRUE){ 
+     if (n <= ns6.blks) {
+          temp.cat.6<-cbind(temp.cat.6,cbind(as.matrix(temp.dat.6[temp.sort.6[,n]==1,n][1:12]),
+                                      as.matrix(temp.dat.6[temp.sort.6[,n]==2,n][1:12]),
+                                      as.matrix(temp.dat.6[temp.sort.6[,n]==3,n][1:12]),
+                                      as.matrix(temp.dat.6[temp.sort.6[,n]==4,n][1:12]),
+                                      as.matrix(temp.dat.6[temp.sort.6[,n]==5,n][1:12]),
+                                      as.matrix(temp.dat.6[temp.sort.6[,n]==6,n][1:12])
+                                     )
+          )
+          }
+     }
+ 
+} 
+#clean missing values -1 
+temp.cat.6[temp.cat.6==-1]=0
+temp.cat.3[temp.cat.3==-1]=0
+#save subject
+wmo.s[i] <- s
+
+
+ mean.acc.3 <-cbind(mean.acc.3,rowMeans(temp.cat.3,na.rm = FALSE)) # accumulates across subjects
+ mean.acc.6 <-cbind(mean.acc.6,rowMeans(temp.cat.6,na.rm = FALSE))
+ #print(length(rowMeans(temp.cat.6,na.rm = TRUE)))
+ #dataframes for model fits
+ tempframe.3 <- data.frame("accuracy" =rowMeans(temp.cat.3),
+                          "iterations" = 1:12 )
+tempframe.6 <- data.frame("accuracy" =rowMeans(temp.cat.6),
+                          "iterations" = 1:12 )
+temp.lm.3 <- lm(accuracy ~ poly(iterations,4), data = tempframe.3)
+temp.lm.6 <- lm(accuracy ~ poly(iterations,4), data = tempframe.6)
+ 
+  if (0) {
+   
+ 
+    plot(rowMeans(temp.cat.3),ylim = c(0,1),col = '#e41a1c',
+          cex=1,lwd=2,pch=19, xlab ='Stimulus presentations',
+          ylab ='Accuracy', main = s)
+    #c(s,   round(summary(temp.lm.3)$coefficients[4,1],3),round(summary(temp.lm.6)$coefficients[4,1],3)
+
+ 
+    #lines(rowMeans(temp.cat.3),ylim = c(0,1),col = 'green4',lwd=2)
+    points(rowMeans(temp.cat.6),ylim = c(0,1),col = '#377eb8',pch=19,cex=1,lwd=2)
+    #lines(rowMeans(temp.cat.6),ylim = c(0,1),col = 'orange',lwd=2)
+    legend("bottomright", c("set size 3", "set size 6"),pch = c( 19, 19),
+           text.col =c( "#e41a1c","#377eb8"), col = c("#e41a1c","#377eb8"))
+
+    lines(tempframe.3$iterations,temp.lm.3$fitted.values,lwd=2.3, col = '#e41a1c')
+    lines(tempframe.6$iterations,temp.lm.6$fitted.values,lwd=2.3, col = '#377eb8')
+  }
+
+learningRate.3[i] <- round(summary(temp.lm.3)$coefficients[4,1],3)
+learningRate.6[i] <- round(summary(temp.lm.6)$coefficients[4,1],3)
+
+
+i = i+ 1
+}
+else {
+  #use this to track missing data
+  Missing.p[i] <-s 
+  
+mean.acc.3 <-cbind(mean.acc.3,rep(NA,12)) # accumulates across subjects
+mean.acc.6 <-cbind(mean.acc.6,rep(NA,12))
+}
+}
+# set size 3 vs set size 6 performance indicator: subtract the two and take the average for each iteration point. A negative number indicates better performance, overall in set size 6, no difference if close to zero
+
+wmo.learn.score <- colMeans(mean.acc.3-mean.acc.6)
 
 ```
 
-### Explanation of variables
- - trial is set-size
- - acc is accuracy
- - seq is image identifier
- - Code is correct response
+
+
+
+```{r export data}
+if(0){
+  
+mean.acc.3 %<>% t()
+mean.acc.6 %<>% t()
+colnames(mean.acc.3) = paste0('ns3.',1:12)
+colnames(mean.acc.6) = paste0('ns6.',1:12)
+rlwm_data <-  cbind(mean.acc.3, mean.acc.6) %>% 
+  as_data_frame()
  
-```{r block analysis, fig.height=6, fig.width=14}
-blk.order=c(1,9,2,3,10,4,11,12,5,6,13,7,14,8)
-
-
-## These category names are not present in the Collins task data, just a number signifying the folder stimuli came from,  so I had to name each one with the category name
-wmo.mod <- 
-  wmodata %>% 
-  mutate('block' =  rep(
-    c(rep('s3_1_kitchenware', 13*3), rep('s6_1_colors', 13*6),rep('s3_2_sports', 13*3) ,rep('s3_3_veggies', 13*3),
-      rep('s6_2_shapes', 13*6),rep('s3_4_rooms', 13*3),rep('s6_3_plants', 13*6),rep('s6_4_fruits', 13*6),
-      rep('s3_5_places', 13*3), rep('s3_6_animals', 13*3),rep('s6_5_tools', 13*6),rep('s3_7_vehicles', 13*3),rep('s6_6_instruments', 13*6),
-      rep('s3_8_clothes', 13*3)
-    ), length(unique(wmodata$subject))),
-    condition= rep(
-    c(rep('s3', 13*3), rep('s6', 13*6),rep('s3', 13*3) ,rep('s3', 13*3),
-      rep('s6', 13*6),rep('s3', 13*3),rep('s6', 13*6),rep('s6', 13*6),
-      rep('s3', 13*3), rep('s3', 13*3),rep('s6', 13*6),rep('s3', 13*3),rep('s6', 13*6),
-      rep('s3', 13*3)
-    ), length(unique(wmodata$subject))),
-    'category' = rep(
-    c(rep('Kitchenware', 13*3), rep('Colors', 13*6),rep('Sports', 13*3) ,rep('Vegetables', 13*3),
-      rep('Shapes', 13*6),rep('Rooms', 13*3),rep('Plants', 13*6),rep('Fruit', 13*6),
-      rep('Places', 13*3), rep('Animals', 13*3),rep('Tools', 13*6),rep('Vehicles', 13*3),rep('Instruments', 13*6),
-      rep('Clothing', 13*3)
-    ), length(unique(wmodata$subject)))
-    
-  ) %>% 
-  arrange(subject, block, seq) %>% 
-  mutate('iteration' = rep(rep(1:13, 60),
-                       length(unique(wmodata$subject)))
-         )
   
-
-
-wmo.mod %>% 
- # filter(subject<1620) %>% 
-dplyr::group_by( block, category, iteration, condition) %>% 
-  summarize(mean=mean(acc), 
-            se=sd(acc)/sqrt(length(acc))) %>%
-
-  ggplot(aes(x=iteration, y=mean, group=block, color=block)) +
-# geom_boxplot()+
-  geom_point() +
- #geom_smooth(method  = 'lm',formula = 'y~poly(x,2)', se=F)+
-  geom_line() +
-  geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=.35, size=1)+
- ylim(c(0, 1.))+
-  facet_wrap(vars(condition)) +
-  viridis::scale_color_viridis(discrete = TRUE, option = 'D')+
-  #facet_wrap(vars(block))+
-#theme(legend.position = 'none')+
-theme_classic(base_size = 20) 
+ns3_test <- rep(mean.test.3,12) %>% 
+    as.matrix() %>% 
+    reshape(., 121,12) %>%
+    as_data_frame()
   
+colnames(ns3_test) <- paste0('nt3.', 1:12)
 
-# 
-# 'iteration' = rep(rep(1:13, 60),
-#                       length(unique(wmodata$subject)))
-```
- 
-```{r correlation with Naming frequency}
+  ns6_test <-  rep(mean.test.6,12) %>% 
+    as.matrix() %>% 
+    reshape(., 121,12) %>%
+    as_data_frame()
+colnames(ns6_test) <- paste0('nt6.', 1:12)
 
-acc_freq_dat <- 
-  wmo.mod %>% 
- filter(iteration>5 & iteration <13) %>% 
-group_by(block, category, iteration) %>% 
-  summarize(m.acc=mean(acc), 
-            se=sd(acc)/sqrt(length(acc))) %>% 
-  ungroup %>% 
-  inner_join(optimalresp_freq, by='category') %>% 
-  group_by(block, category) %>% 
-  summarise(mean.prop = mean(proportion), 
-            mean.acc=mean(m.acc)) %>% 
-  ungroup()
+rlwm_data %<>% 
+  cbind(ns3_test, ns6_test) %>% 
+   mutate(Subjects = Subjects) 
 
-  acc_freq_dat %$% cor.test(mean.prop, mean.acc, method = 'pearson') %>% 
-    broom::tidy() %>% 
-    knitr::kable()
-
-acc_freq_dat %>% 
-  ggplot(aes(x=mean.acc, y=mean.prop) ) +
-  geom_point(size=6, alpha=.8, color='orange') +
-  geom_smooth(method = 'lm', color='red', alpha=.2) +
-  geom_text(aes(label=block), check_overlap = T, nudge_y = .01) +
-  xlab('Learning accuracy')+
-  ylab('Optimal name proportion')+
-  theme_classic(base_size = 18) 
- # coord_cartesian(xlim = c(0.3, 1), ylim = c(0.3, 1))
-  #,coord_equal()
-  
-  
-```
-
-```{r correlation with Naming response variability}
-acc_variability_dat <- 
-  wmo.mod %>% 
- # filter(subject<1620) %>% 
-group_by(block, category, iteration) %>% 
-  summarize(m.acc=mean(acc), 
-            se=sd(acc)/sqrt(length(acc))) %>% 
-  ungroup %>% 
-  inner_join(response_diversity, by='category') %>% 
-  group_by(block, category) %>% 
-  summarise(mean.unique = mean(resp_unique), 
-            mean.acc=mean(m.acc)) %>% 
-  ungroup()
-
-  acc_variability_dat %$% cor.test(mean.unique, mean.acc, method = 'pearson') %>% 
-    broom::tidy() %>% 
-     knitr::kable()
+}
 
 
-acc_variability_dat %>% 
-  ggplot(aes(x=mean.acc, y=mean.unique) ) +
-  geom_point(size=6, alpha=.4, color='orange') +
-  geom_smooth(method = 'lm', alpha=.2, color='red') +
-  geom_text(aes(label=block), check_overlap = T, nudge_y = .01) +
-  theme_classic(base_size = 18) 
- # coord_cartesian(xlim = c(0.3, 1), ylim = c(0.3, 1))
-  #,coord_equal()
-  
-```
- 
-```{r export reaction time data}
-wmodata %>% 
-  dplyr::mutate(
-   condition= rep(
-    c(rep('s3', 13*3), rep('s6', 13*6),rep('s3', 13*3) ,rep('s3', 13*3),
-      rep('s6', 13*6),rep('s3', 13*3),rep('s6', 13*6),rep('s6', 13*6),
-      rep('s3', 13*3), rep('s3', 13*3),rep('s6', 13*6),rep('s3', 13*3),rep('s6', 13*6),
-      rep('s3', 13*3)
-    ), length(unique(wmodata$subject)))) %>% 
-  arrange(subject, condition, seq) %>% 
-  mutate('iteration' = rep(rep(1:13, 60),
-                       length(unique(wmodata$subject))), 
-         'half' = rep(c(rep('half1',(30 * 13)),rep('half2',(30*13))),
-                    length(unique(wmodata$subject)))
-         ) %>% 
-  filter(subject==6200) %>% 
-  #filter(acc!=-1) %>% 
-  dplyr::group_by(half,condition, iteration) %>% 
-  dplyr::summarise(mean.acc = mean(acc), 
-                   n=length(acc), 
-                   mean.RT = mean(RT)) %>% View
-  ggplot(aes(x=iteration,y= mean.RT, group=condition, color=condition)) +
-  geom_point() +
-  geom_line() +
-  facet_wrap(vars(half))+
-  ylim(c(0.3,1))
-  
-
-
-filter(acc!=-1) %>% 
-  dplyr::group_by(subject,trial, acc) %>% 
-  
-  dplyr::summarise(mean=mean(RT), 
-                   n=length(RT)) %>% 
-  ggplot(aes(y=mean,x=as.factor(trial), color=as.factor(acc)))+ #x=as.factor(acc))) +
- # geom_point() +
-  geom_violin()#+
-  #facet_wrap(vars(trial))
 
 ```
- 
- 

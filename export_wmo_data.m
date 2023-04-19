@@ -8,12 +8,12 @@ Training_headers = {'subject','acc','RT','Code','seq','actionseq','timeseq','tri
     Test_headers = {'subject','acc','RT','Code','stim'}; 
 %   Import data for each participant
 % Path = '/Volumes/GoogleDrive/My Drive/CCDL Shared/Shared/Teddy/MM_WMO'
-Path = './raw/WMO';
- SavePath = './processed';
+Path = './behavioral_data_raw/WMO_data';
+ SavePath = './processed_data';
 %SavePath = '/Volumes/GoogleDrive/My Drive/CCDL Shared/Shared/Teddy/MM_WMO'
- Thesefiles =  csvread('wmo_uCLIMB_subjects.csv');%'Subjects_uclimb_and_subjectpool.csv');
+ Thesefiles =  csvread('stag_2023_subjects.csv' );%'Subjects_uclimb_and_subjectpool.csv');
 %258852;%
- %dir([Path,'/*ID*.mat']);
+ %Thesefiles = dir([Path,'/*ID*.mat']);
     Training = [];
     Test = [];
     missing_dat = [];
@@ -51,9 +51,9 @@ end
 %Export
 cd(SavePath)
  writetable(array2table(Training,'VariableNames',Training_headers), ...
-            'wmo_training_uclimb') 
+            'wmo_training_2023') 
        writetable(array2table(Test,'VariableNames',Test_headers), ...
-           'wmo_test_uclimb')        
+           'wmo_test_2023')        
 
        %writetable(array2table(missing_dat','VariableNames',"MissingSubjects"), ...
         %   'wmo_MissingWinter19Pooldata')
