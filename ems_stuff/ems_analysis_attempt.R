@@ -1,3 +1,4 @@
+library("SlimStampeRData")
 library("tidyr")
 library("dplyr")
 library("ggplot2")
@@ -10,6 +11,24 @@ library("wesanderson")
 library("viridis")
 library("plotly")
 library("knitr")
+library("readr")
+# SlimStampen
+# uncomment "install.packages", "uncomment devtools" code
+# install.packages("devtools") # Install SlimStampen packages. Instructions on https://github.com/VanRijnLab/SlimStampeRData
+library("devtools")
+#  devtools::install_github("VanRijnLab/SlimStampeRData",
+#   build_vignettes = TRUE,
+#  dependencies = TRUE,
+# force = TRUE)
+# The console will show a prompt asking whether all packages should be updated. Select option 1 (by typing 1 and then pressing enter), this will update all packages.
+#vignette("SlimStampeRVignette")
+
+#.xslx files were saved as .csv before importing 
+
+# function to capitalize the first letter of a word
+capitalize_word <- function(word) {
+  paste0(toupper(substr(word, 1, 1)), substr(word, 2, nchar(word)))
+}
 
 #Categorize as monolingual/bilingual, but keep data on early vs late acquisition for bilingual ? 
 #What to do about "none of the above"?
@@ -18,161 +37,140 @@ library("knitr")
 #facet ; box no -> candy and map box w x axis candy first or last, colors language, y accuracy 
 #want accurate answers out of total and last alpha for each 
 
-demographics_full_data <- read.csv("behavioral_data_raw/STAG consent and Demographics_April 14, 2023_17.58.csv") 
-demographics_full_data <- demographics_full_data[-1,] #removing row w/ column names
-demographics_full_data <- demographics_full_data[-1,] #removing row w/ import data
-demographics_full_data <- demographics_full_data[order(demographics_full_data$Subject..,  
-                                                       decreasing = T),]
-  
+#lang classification df=================================================
+langs <- read_dataset("behavioral_data_raw/STAG_lang.csv") %>%
+  rename("screenName" = "id") #joining later by "screenName"
+langs <- langs[-nrow(langs)] #removed empty row at end
+langs <- langs[,-2] #removing gender column
 
-#fixing demographic errors (birthdays listed as the date)
-col_index <- which(colnames(demographics_full_data) == "Date")
-row_index <- which(demographics_full_data$Subject.. == 7521)
+#setting up candy data==================================================
+candy_raw_data <- read_dataset("behavioral_data_raw/slim/9856_Candy_responses 2.csv") %>%
+  rename("presentationStartTime" = "presentation_start_time")
 
-demographics_full_data[row_index, col_index] <- "4/11/23"
+# get the column names of the data
+col_names <- colnames(candy_raw_data)
 
+# split the column names into words
+col_words <- strsplit(col_names, "_")
 
-candy_slim_full_data <- read.csv("behavioral_data_raw/slim/9856_Candy_responses 2.csv") 
+# capitalize the second word of each column name
+col_words_modified <- lapply(col_words, function(x) {
+  if(length(x) > 1) {
+    x[2] <- capitalize_word(x[2])
+  }
+  return(x)
+})
 
-maps_slim_full_data <- read.csv("behavioral_data_raw/slim/9857_Maps_responses 2.csv")
+# paste the modified column names back together
+new_col_names <- sapply(col_words_modified, function(x) {
+  paste(x, collapse = "")
+})
 
-# #adding overall bilingual category to full demographics
-# #see under "lang.classification2"
-# demographics_full_data <- demographics_full_data %>%
-#   mutate(lang.classification2 = NA)
+# set the new column names
+colnames(candy_raw_data) <- new_col_names
 
-# for (i in 1:nrow(demographics_full_data)){
-#   if (grepl("Early Bilingual", demographics_full_data$lang.classification[i])) {
-#     demographics_full_data$lang.classification2[i] <- "Bilingual"
-#   } else if (grepl("Late Bilingual", demographics_full_data$lang.classification[i])){
-#     demographics_full_data$lang.classification2[i] <- "Bilingual"
-#   } else if (grepl("Monolingual", demographics_full_data$lang.classification[i])){
-#     demographics_full_data$lang.classification2[i] <- "Monolingual"
-#   } else {
-#     demographics_full_data$lang.classification2[i] <- "None of the above"
-#   }
-# }
+#repeat for maps========================================================
+maps_raw_data <- read_dataset("behavioral_data_raw/slim/9857_Maps_responses 2.csv") %>%
+  rename("presentationStartTime" = "presentation_start_time")
 
-# #pulling bilingual 
-# bi_demographics <- demographics_full_data %>%
-#   subset(lang.classification2 == "Bilingual") %>%
-#   bind_rows(subset(demographics_full_data, lang.classification == "Late Bilingual"))
+# set the new column names
+colnames(maps_raw_data) <- new_col_names
 
-# #pulling monolingual
-# mono_demographics <- demographics_full_data %>%
-#   subset(lang.classification == "Monolingual")
-# 
-# #pulling "none of the above"
-# unknown_lang_demographics <- mono_demographics <- demographics_full_data %>%
-#   subset(lang.classification == "None of the above")
+#removing Teddy==============================================
+candy_raw_data <- candy_raw_data %>%
+  filter(screenName != "TeddyHaile")
+maps_raw_data <- maps_raw_data %>%
+  filter(screenName != "TeddyHaile")
 
-#removing Teddy
-candy_slim_full_data <- candy_slim_full_data %>%
-  filter(screen_name != "TeddyHaile")
-maps_slim_full_data <- maps_slim_full_data %>%
-  filter(screen_name != "TeddyHaile")
+#make columns for lesson + repitition===============================================
+candy_raw_data <- candy_raw_data %>%
+  mutate(lessonTitle = "C", .before = "screenName") %>%
+  calculate_repetition()
+maps_raw_data <- maps_raw_data %>%
+  mutate(lessonTitle = "M", .before = "screenName") %>%
+  calculate_repetition()
 
 #getting data for first/last version===========================================
-
-#making lists for which subjects did what first 
-maps_first_subject_ids <- list()
- for (i in seq(7500, demographics_full_data$Subject[1], by = 2)) {
-   maps_first_subject_ids[[length(maps_first_subject_ids) + 1]] <- i
- }
-maps_first_subject_ids <- tibble(maps_first_subject_ids)
-
+#making lists for which subjects did what first
+langs <- langs %>%
+  arrange(desc(screenName))
 candy_first_subject_ids <- list()
-for (i in seq(7501, demographics_full_data$Subject..[1], by = 2)) {
+for (i in seq(7501, langs$screenName[1], by = 2)) {
   candy_first_subject_ids[[length(candy_first_subject_ids) + 1]] <- i
 }
 candy_first_subject_ids <- tibble(candy_first_subject_ids)
 
-#putting everything together===============================================
-#categorizing candy
-candy_slim_full_data <- candy_slim_full_data %>%
-  mutate(Type = "C", .before = "screen_name") %>%
-  rename("Subject.." = "screen_name") %>%
-  mutate(presented_first = NA, .before = "Subject..")
-#marking if first
-candy_slim_full_data$presented_first[candy_slim_full_data$Subject.. %in% 
-                                       candy_first_subject_ids$candy_first_subject_ids] <- TRUE
-candy_slim_full_data$presented_first[candy_slim_full_data$Subject.. %in% 
-                                       maps_first_subject_ids$maps_first_subject_ids] <- FALSE
-#marking if second
-candy_slim_full_data <- candy_slim_full_data %>%
-  mutate(presented_second = NA, .before = "Subject..")
-
-candy_slim_full_data$presented_second[candy_slim_full_data$Subject.. %in% 
-                                       candy_first_subject_ids$candy_first_subject_ids] <- FALSE
-candy_slim_full_data$presented_second[candy_slim_full_data$Subject.. %in% 
-                                       maps_first_subject_ids$maps_first_subject_ids] <- TRUE
-
-#categorizing maps
-maps_slim_full_data <- maps_slim_full_data %>%
-  mutate(Type = "M", .before = "screen_name") %>%
-  rename("Subject.." = "screen_name") %>%
-  mutate(presented_first = NA, .before = "Subject..")
-#marking if first
-maps_slim_full_data$presented_first[maps_slim_full_data$Subject.. %in% 
-                                       maps_first_subject_ids$maps_first_subject_ids] <- TRUE
-maps_slim_full_data$presented_first[maps_slim_full_data$Subject.. %in% 
-                                       candy_first_subject_ids$candy_first_subject_ids] <- FALSE
-#marking if second
-maps_slim_full_data <- maps_slim_full_data %>%
-  mutate(presented_second = NA, .before = "Subject..")
-
-maps_slim_full_data$presented_second[maps_slim_full_data$Subject.. %in% 
-                                        maps_first_subject_ids$maps_first_subject_ids] <- FALSE
-maps_slim_full_data$presented_second[maps_slim_full_data$Subject.. %in% 
-                                        candy_first_subject_ids$candy_first_subject_ids] <- TRUE
-
-master_slim <- rbind(maps_slim_full_data, candy_slim_full_data)
-master_slim <- master_slim[order(master_slim$Subject..,  
-                                                       decreasing = F),]
-
-#Getting highest sequence reached per subject per type=======================
-#maps
-maps_subject_list <- tibble(maps_slim_full_data$Subject..) %>%
-  distinct() %>%
-  rename("Subject.." = "maps_slim_full_data$Subject..")
-
-maps_last_sequence <- data_frame(matrix(nrow = nrow(maps_subject_list), ncol = 1))
-for (i in 1:nrow(maps_last_sequence)){
-maps_last_sequence[i, 1] <- max(subset(master_slim, Subject.. == maps_subject_list$Subject..[i] &
-                           Type == "M")$sequence_number)
+maps_first_subject_ids <- list()
+for (i in seq(7500, langs$screenName[1], by = 2)) {
+  maps_first_subject_ids[[length(maps_first_subject_ids) + 1]] <- i
 }
-maps_last_sequence <- maps_last_sequence %>%
-  mutate(Subject.. = maps_subject_list$Subject..) %>%
-  rename("last_sequence_number" = "matrix(nrow = nrow(maps_subject_list), ncol = 1)")
+maps_first_subject_ids <- tibble(maps_first_subject_ids)
 
+#candy marking if first
+candy_raw_data <- candy_raw_data %>%
+  mutate(maps_first = NA, .before = "screenName") %>%
+  mutate(candy_first = NA, .before = "screenName")
+candy_raw_data$maps_first[candy_raw_data$screenName %in%
+                                       candy_first_subject_ids$candy_first_subject_ids] <- FALSE
+candy_raw_data$maps_first[candy_raw_data$screenName %in%
+                                       maps_first_subject_ids$maps_first_subject_ids] <- TRUE
+candy_raw_data$candy_first[candy_raw_data$screenName %in%
+                            candy_first_subject_ids$candy_first_subject_ids] <- TRUE
+candy_raw_data$candy_first[candy_raw_data$screenName %in%
+                            maps_first_subject_ids$maps_first_subject_ids] <- FALSE
+#maps marking if first
+maps_raw_data <- maps_raw_data %>%
+  mutate(maps_first = NA, .before = "screenName") %>%
+  mutate(candy_first = NA, .before = "screenName")
+maps_raw_data$maps_first[maps_raw_data$screenName %in%
+                                 maps_first_subject_ids$maps_first_subject_ids] <- TRUE
+maps_raw_data$maps_first[maps_raw_data$screenName %in%
+                                 candy_first_subject_ids$candy_first_subject_ids] <- FALSE
+maps_raw_data$candy_first[maps_raw_data$screenName %in%
+                             candy_first_subject_ids$candy_first_subject_ids] <- TRUE
+maps_raw_data$candy_first[maps_raw_data$screenName %in%
+                             maps_first_subject_ids$maps_first_subject_ids] <- FALSE
+
+#adding languages and averages====================================================
+langs$screenName <- as.character(langs$screenName)
 #candy
-candy_subject_list <- tibble(candy_slim_full_data$Subject..) %>%
-  distinct() %>%
-  rename("Subject.." = "candy_slim_full_data$Subject..")
+candy_raw_data <- left_join(candy_raw_data, langs, by = "screenName")
+candy_avg <- candy_raw_data %>%
+  group_by(screenName, maps_first, candy_first, language) %>%
+  summarize(candy_mean_rof = mean(alpha))
+accuracy_candy <- candy_raw_data %>%
+  group_by(screenName)%>%
+  summarize(candy_mean_accuracy = mean(correct))
+candy_avg <- left_join(candy_avg, accuracy_candy)
+#maps
+maps_raw_data <- left_join(maps_raw_data, langs, by = "screenName")
+maps_avg <- maps_raw_data %>%
+  group_by(screenName, maps_first, candy_first, language) %>%
+  summarize(maps_mean_rof = mean(alpha))
+accuracy_maps <- maps_raw_data %>%
+  group_by(screenName)%>%
+  summarize(maps_mean_accuracy = mean(correct))
+maps_avg <- left_join(maps_avg, accuracy_maps)
+#combining data=====================================
+master_data <- left_join(maps_avg, candy_avg) %>%
+  group_by(screenName, maps_first, language)
+# master_data$maps_first <- ifelse(master_data$maps_first == FALSE, "Candy First",
+#                                  master_data$maps_first)
+# master_data$maps_first <- ifelse(master_data$maps_first == TRUE, "Maps First",
+#                                  master_data$maps_first)
 
-candy_last_sequence <- data_frame(matrix(nrow = nrow(candy_subject_list), ncol = 1))
-for (i in 1:nrow(candy_last_sequence)){
-  candy_last_sequence[i, 1] <- max(subset(master_slim, Subject.. == candy_subject_list$Subject..[i] &
-                                           Type == "C")$sequence_number)
-}
-candy_last_sequence <- candy_last_sequence %>%
-  mutate(Subject.. = candy_subject_list$Subject..) %>%
-  rename("last_sequence_number" = "matrix(nrow = nrow(candy_subject_list), ncol = 1)")
-
-#figure out how to do this after combining the last sequences 
-maps_test <- maps_last_sequence %>%
-  left_join(master_slim, by = "Subject..") %>%
-  subset(sequence_number == last_sequence_number)
+# master_averages <- master_data %>%
+#   group_by()
 
 
-
-
-
-
-
-
-
-
+avg_plot <- plot_ly(master_data, x = ~language, color = ~maps_first, hoverinfo = "none") %>%
+  add_trace(y = ~mean(maps_mean_rof), type = "bar") %>%
+  add_trace(y = ~mean(candy_mean_rof), type = "bar", showlegend = F) %>%
+  layout(barmode = "group") #%>%
+  # add_trace(y = ~maps_mean_rof, type = "box") %>%
+  # add_trace(y = ~candy_mean_rof, type = "box", showlegend = F) 
+  
+avg_plot
 
 
 
