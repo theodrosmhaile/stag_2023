@@ -20,8 +20,8 @@ Import data and set variables
 ```{r}
 
 #Import data
-wmodata     <- read.csv('./processed_data//wmo_training_2023.txt') 
-wmotestdata <- read.csv('./processed_data//wmo_test_2023.txt') 
+wmodata     <- read.csv('./processed_data/wmo_training_2023.txt') 
+wmotestdata <- read.csv('./processed_data/wmo_test_2023.txt') 
 
 
 Training.blocks <- c(3,6,3,3,6,3,6,6,3,3,6,3,6,3) #from data
@@ -42,8 +42,8 @@ ns6.n <- 6
 Subjects <- as.matrix(read.csv('stag_2023_subjects.csv',header = FALSE))
 
 # excluded subjects 
-# ---- 7532 don't know why yet
- Subjects[33]=0
+# ---- 7532, 7519 don't know why yet
+ Subjects[c(33, 20,2)]=0
 ```
  
 This block performs the learning/accuracy curve: acc by item`r ns6` iteration  
@@ -156,36 +156,53 @@ wmo.learn.score <- colMeans(mean.acc.3-mean.acc.6)
 
 ```
 
+```{r analyze test data}
+ns3.test.mean <- c()
+ns6.test.mean <- c()
+i = 1
+for (s in Subjects) {
+  OneSub <- wmotestdata$subject==s  
+  ns3.test.mean[i] <- mean(wmotestdata[!is.na(match(wmotestdata[,"stim"],block.3)) & OneSub,"acc"])
+  ns6.test.mean[i] <- mean(wmotestdata[!is.na(match(wmotestdata[,"stim"],block.6)) & OneSub,"acc"])
+
+  i = i + 1
+}
+TestData=data.frame(ns3.test.mean,ns6.test.mean)
+
+```
 
 
 
 ```{r export data}
-if(0){
+if(1){
   
 mean.acc.3 %<>% t()
 mean.acc.6 %<>% t()
-colnames(mean.acc.3) = paste0('ns3.',1:12)
-colnames(mean.acc.6) = paste0('ns6.',1:12)
+colnames(mean.acc.3) = paste0('learn3_',1:12)
+colnames(mean.acc.6) = paste0('learn6_',1:12)
 rlwm_data <-  cbind(mean.acc.3, mean.acc.6) %>% 
   as_data_frame()
  
   
-ns3_test <- rep(mean.test.3,12) %>% 
+ns3_test <- rep(ns3.test.mean,12) %>% 
     as.matrix() %>% 
     reshape(., 121,12) %>%
     as_data_frame()
   
-colnames(ns3_test) <- paste0('nt3.', 1:12)
+colnames(ns3_test) <- paste0('test3_', 1:12)
 
-  ns6_test <-  rep(mean.test.6,12) %>% 
+  ns6_test <-  rep(ns6.test.mean,12) %>% 
     as.matrix() %>% 
     reshape(., 121,12) %>%
     as_data_frame()
-colnames(ns6_test) <- paste0('nt6.', 1:12)
+colnames(ns6_test) <- paste0('test6_', 1:12)
 
 rlwm_data %<>% 
   cbind(ns3_test, ns6_test) %>% 
-   mutate(Subjects = Subjects) 
+   mutate(subjects = Subjects %>% c()) %>% 
+  drop_na()
+
+write_csv(rlwm_data, 'RLWM_data_stag2023_test.csv')
 
 }
 

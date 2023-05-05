@@ -1,0 +1,79 @@
+StartDate,EndDate,Duration (in seconds),RecipientLastName,Id,current age,sex,gender,ethnicity,race,years of school,handedness,english nativeness,second native yn,second native lang,lang classification
+4/10/23 10:43,4/10/23 10:53,595,,7500,19,Female,Female,Prefer Not To Answer,Asian,12 (Completed Highschool),Right,No,Yes,Chinese,Early Bilingual
+4/10/23 12:35,4/10/23 12:43,477,,7502,20,Female,Female,Not Hispanic or Latino,Asian,15 (College Junior),Right,No,Yes,Cantonese,Early Bilingual
+4/10/23 12:22,4/10/23 12:49,1611,,7501,22,Female,Female,Not Hispanic or Latino,Asian,15 (College Junior),Right,No,No,,Late Bilingual
+4/10/23 14:09,4/10/23 14:30,1278,,7503,24,Female,Other,Not Hispanic or Latino,Multiracial,15 (College Junior),Right,Yes,No,,Monolingual
+4/10/23 14:18,4/10/23 16:24,7544,,7505,18,Female,Female,Not Hispanic or Latino,White,12 (Completed Highschool),Right,Yes,No,,Monolingual
+4/10/23 15:47,4/10/23 16:25,2281,,7506,19,Female,Other,Not Hispanic or Latino,White,13 (College Freshman),Right,Yes,No,,Monolingual
+4/10/23 17:42,4/10/23 18:10,1681,,7507,24,Male,Male,Not Hispanic or Latino,Other,15 (College Junior),Right,No,No,,None of the above
+4/10/23 17:46,4/10/23 18:11,1555,,7508,20,Male,Male,Not Hispanic or Latino,Asian,14 (College Sophmore),Right,No,Yes,Chinese,None of the above
+4/11/23 9:51,4/11/23 9:59,454,,7509,18,Male,Male,Not Hispanic or Latino,White,12 (Completed Highschool),Right,Yes,No,,Monolingual
+4/11/23 11:22,4/11/23 11:38,934,,7512,19,Female,Female,Not Hispanic or Latino,White,13 (College Freshman),Left,Yes,No,,Monolingual
+4/11/23 12:54,4/11/23 13:17,1364,,7513,19,Male,Male,Not Hispanic or Latino,White,13 (College Freshman),Right,Yes,No,,Monolingual
+4/11/23 12:57,4/11/23 13:24,1624,,7510,20,Female,Female,Not Hispanic or Latino,Asian,16 (Completed College),Right,Yes,No,,Early Bilingual
+4/11/23 14:46,4/11/23 15:00,854,,7515,18,Female,Female,Not Hispanic or Latino,Asian,13 (College Freshman),Right,No,Yes,Chinese,Early Bilingual
+4/11/23 10:21,4/11/23 16:37,22513,,7516,18,Female,Female,Not Hispanic or Latino,Asian,12 (Completed Highschool),Right,Yes,No,,Monolingual
+4/11/23 16:20,4/11/23 16:38,1091,,7517,18,Female,Female,Not Hispanic or Latino,White,13 (College Freshman),Right,Yes,No,,Monolingual
+4/11/23 17:53,4/11/23 18:24,1811,,7519,18,Female,Female,Not Hispanic or Latino,Other,13 (College Freshman),Right,No,Yes,Arabic,Early Bilingual
+4/11/23 17:57,4/11/23 18:26,1743,,7518,18,Male,Male,Not Hispanic or Latino,White,14 (College Sophmore),Right,Yes,No,,Monolingual
+4/12/23 8:56,4/12/23 9:03,430,,7520,19,Male,Male,Not Hispanic or Latino,Asian,13 (College Freshman),Right,No,Yes,Punjabi,Early Bilingual
+4/12/23 12:11,4/12/23 12:19,495,,7504,19,Male,Male,Hispanic or Latino,Other,12 (Completed Highschool),Right,Yes,Yes,Spanish,Early Bilingual
+4/12/23 10:57,4/12/23 12:23,5171,,7522,21,Male,Male,Not Hispanic or Latino,Asian,15 (College Junior),Right,Yes,No,,Monolingual
+4/12/23 15:26,4/12/23 15:41,895,,7523,22,Male,Male,Not Hispanic or Latino,White,15 (College Junior),Right,No,No,,Late Bilingual
+4/12/23 15:30,4/12/23 15:42,704,,7525,18,Female,Female,Hispanic or Latino,Other,12 (Completed Highschool),Right,Yes,Yes,Spanish,Early Bilingual
+4/13/23 8:50,4/13/23 9:02,773,,7514,18,Female,Female,Not Hispanic or Latino,Asian,12 (Completed Highschool),Right,No,Yes,Chinese,Monolingual
+4/13/23 8:53,4/13/23 9:09,917,,7520,19,Female,Female,Not Hispanic or Latino,Asian,15 (College Junior),Left,No,Yes,Cantonese,Early Bilingual
+4/13/23 10:34,4/13/23 10:41,402,,7524,19,Female,Female,Not Hispanic or Latino,White,13 (College Freshman),Right,Yes,No,,None of the above
+4/13/23 10:30,4/13/23 10:44,809,,7526,19,Female,Other,Hispanic or Latino,Prefer Not to Answer,13 (College Freshman),Right,No,Yes,spanish,Early Bilingual
+4/13/23 12:12,4/13/23 12:26,867,,7528,19,Male,Male,Hispanic or Latino,White,13 (College Freshman),Right,Yes,No,,Monolingual
+4/13/23 12:38,4/13/23 12:46,514,,7527,22,Female,Female,Hispanic or Latino,White,12 (Completed Highschool),Right,Yes,Yes,Spanish,Early Bilingual
+4/13/23 13:46,4/13/23 14:00,833,,7529,19,Male,Male,Not Hispanic or Latino,Asian,13 (College Freshman),Right,Yes,Yes,Cantonese ,Late Bilingual
+4/13/23 14:05,4/13/23 14:10,292,,7530,19,Female,Female,Not Hispanic or Latino,Asian,12 (Completed Highschool),Right,Yes,No,,Monolingual
+4/13/23 15:40,4/13/23 15:47,416,,7532,20,Female,Female,Not Hispanic or Latino,Multiracial,15 (College Junior),Right,Yes,No,,Monolingual
+4/13/23 15:22,4/13/23 15:48,1577,,7531,18,Female,Female,Not Hispanic or Latino,Asian,13 (College Freshman),Right,Yes,No,,Early Bilingual
+4/13/23 17:00,4/13/23 17:18,1043,,7535,21,Female,Female,Not Hispanic or Latino,White,15 (College Junior),Left,Yes,No,,Late Bilingual
+4/13/23 16:42,4/13/23 17:21,2360,,7533,19,Female,Female,Not Hispanic or Latino,White,13 (College Freshman),Right,Yes,Yes,Swedish,Early Bilingual
+4/13/23 18:44,4/14/23 9:09,51904,,7536,19,Female,Female,Not Hispanic or Latino,Asian,13 (College Freshman),Left,No,No,,Monolingual
+4/14/23 9:02,4/14/23 10:43,6040,,7537,21,Female,Male,Not Hispanic or Latino,Asian,12 (Completed Highschool),Right,No,Yes,Chinese,Monolingual
+4/14/23 12:08,4/14/23 12:21,754,,7540,22,Male,Male,Not Hispanic or Latino,Asian,13 (College Freshman),Right,No,Yes,Chinese,Early Bilingual
+4/14/23 10:28,4/14/23 12:31,7366,,7538,22,Female,Female,Not Hispanic or Latino,Black / African American,15 (College Junior),Right,Yes,Yes,Tigrinya,Early Bilingual
+4/14/23 13:55,4/14/23 14:02,446,,7542,19,Male,Male,Not Hispanic or Latino,Asian,14 (College Sophmore),Right,No,Yes,English,Early Bilingual
+4/14/23 13:51,4/14/23 14:05,837,,7541,22,Female,Female,Not Hispanic or Latino,Asian,15 (College Junior),Right,No,Yes,Filipino,Early Bilingual
+4/14/23 17:06,4/14/23 17:23,985,,7511,19,Female,Female,Not Hispanic or Latino,White,12 (Completed Highschool),Right,Yes,No,,Monolingual
+4/17/23 15:11,4/17/23 15:21,582,,7546,18,Female,Female,Not Hispanic or Latino,Asian,12 (Completed Highschool),Right,Yes,Yes,Chinese,Early Bilingual
+4/17/23 15:15,4/17/23 15:30,903,,7544,19,Female,Female,Not Hispanic or Latino,Asian,13 (College Freshman),Right,Yes,No,,Monolingual
+4/18/23 9:34,4/18/23 9:40,344,,7548,19,Male,Male,Not Hispanic or Latino,White,12 (Completed Highschool),Left,Yes,No,,None of the above
+4/18/23 10:39,4/18/23 11:05,1566,,7549,35,Female,Female,Not Hispanic or Latino,White,15 (College Junior),Left,Yes,No,,Monolingual
+4/18/23 11:01,4/18/23 11:06,270,,7565,18,Male,Male,Not Hispanic or Latino,Other,15 (College Junior),Right,Yes,Yes,Hebrew,Early Bilingual
+4/18/23 12:26,4/18/23 12:48,1328,,7550,22,Male,Male,Not Hispanic or Latino,Asian,15 (College Junior),Right,No,No,,Late Bilingual
+4/18/23 12:22,4/18/23 12:48,1612,,7545,22,Female,Female,Not Hispanic or Latino,Asian,15 (College Junior),Right,Yes,No,,Early Bilingual
+4/18/23 14:09,4/18/23 14:33,1436,,7551,21,Male,Male,Prefer Not To Answer,Asian,15 (College Junior),Right,Yes,Yes,Bengali,Early Bilingual
+4/18/23 14:07,4/18/23 14:33,1557,,7552,19,Male,Male,Not Hispanic or Latino,Asian,13 (College Freshman),Right,Yes,Yes,Cantonese,Early Bilingual
+4/18/23 16:42,4/18/23 17:53,4252,,7553,21,Female,Female,Not Hispanic or Latino,White,15 (College Junior),Right,Yes,No,,Monolingual
+4/18/23 17:43,4/18/23 17:53,604,,7566,18,Female,Female,Prefer Not To Answer,Asian,13 (College Freshman),Right,No,No,,Monolingual
+4/18/23 19:14,4/19/23 14:04,67838,,7555,20,Female,Female,Not Hispanic or Latino,White,14 (College Sophmore),Left,No,Yes,Russian ,Late Bilingual
+4/19/23 15:32,4/19/23 15:39,434,,7557,21,Female,Female,Hispanic or Latino,White,15 (College Junior),Right,Yes,No,,Monolingual
+4/19/23 13:52,4/19/23 15:41,6518,,7558,19,Female,Female,Not Hispanic or Latino,Asian,12 (Completed Highschool),Right,Yes,No,,Monolingual
+4/19/23 18:45,4/19/23 19:12,1633,,7560,18,Male,Male,Not Hispanic or Latino,Asian,13 (College Freshman),Right,Yes,Yes,Chinese,Early Bilingual
+4/20/23 13:26,4/20/23 13:34,431,,7561,19,Male,Male,Not Hispanic or Latino,Asian,13 (College Freshman),Right,Yes,No,,Monolingual
+4/20/23 13:27,4/20/23 13:35,429,,7562,20,Female,Female,Not Hispanic or Latino,White,14 (College Sophmore),Right,Yes,No,,None of the above
+4/26/23 13:51,4/26/23 14:14,1343,,7539,19,Female,Female,Not Hispanic or Latino,Asian,13 (College Freshman),Right,Yes,Yes,Korean,Early Bilingual
+4/27/23 13:36,4/27/23 13:41,297,,7563,21,Female,Female,Not Hispanic or Latino,White,15 (College Junior),Right,Yes,Yes,Hebrew,Early Bilingual
+4/27/23 12:35,4/27/23 13:41,3981,,7564,22,Female,Female,Not Hispanic or Latino,White,15 (College Junior),Right,Yes,No,,Monolingual
+4/27/23 14:58,4/27/23 15:18,1179,,7543,20,Prefer not to answer,Prefer not to answer,Prefer Not To Answer,Prefer Not to Answer,14 (College Sophmore),Right,Yes,No,,Monolingual
+4/27/23 14:57,4/27/23 15:22,1538,,7547,18,Male,Male,Not Hispanic or Latino,Asian,13 (College Freshman),Right,Yes,No,,Early Bilingual
+4/27/23 16:46,4/27/23 17:02,979,,7556,18,Female,Female,Not Hispanic or Latino,Asian,12 (Completed Highschool),Right,No,No,,Early Bilingual
+4/27/23 16:50,4/27/23 17:04,835,,7559,20,Male,Male,Not Hispanic or Latino,Asian,14 (College Sophmore),Right,No,Yes,Chinese,Late Bilingual
+4/28/23 11:30,4/28/23 11:44,848,,7554,20,Male,Male,Not Hispanic or Latino,Other,15 (College Junior),Right,Yes,Yes,Farsi,Early Bilingual
+4/28/23 14:41,4/28/23 14:57,937,,7567,22,Female,Female,Hispanic or Latino,Prefer Not to Answer,15 (College Junior),Right,Yes,Yes,Spanish,Late Bilingual
+4/28/23 14:38,4/28/23 16:35,7017,,7568,19,Female,Female,Not Hispanic or Latino,Asian,13 (College Freshman),Right,Yes,No,,Monolingual
+5/3/23 10:05,5/3/23 10:11,311,,7569,20,Male,Male,Not Hispanic or Latino,Asian,15 (College Junior),Right,Yes,Yes,Vietnamese,Early Bilingual
+5/3/23 10:03,5/3/23 10:11,503,,7570,19,Female,Female,Not Hispanic or Latino,White,13 (College Freshman),Right,Yes,No,,Monolingual
+5/4/23 10:04,5/4/23 13:40,12962,,7574,19,Female,Female,Hispanic or Latino,White,13 (College Freshman),Left,Yes,No,,Monolingual
+5/4/23 9:27,5/4/23 13:41,15235,,7573,19,Female,Female,Hispanic or Latino,White,13 (College Freshman),Right,Yes,Yes,spanish,Early Bilingual
+5/4/23 14:59,5/4/23 15:22,1336,,7572,19,Male,Male,Not Hispanic or Latino,White,13 (College Freshman),Right,Yes,No,,Monolingual
+5/4/23 14:52,5/4/23 15:40,2885,,7575,19,Female,Female,Not Hispanic or Latino,Asian,12 (Completed Highschool),Right,Yes,Yes,Vietnamese,Early Bilingual
+5/4/23 16:38,5/4/23 16:59,1266,,7577,18,Female,Female,Not Hispanic or Latino,White,13 (College Freshman),Right,Yes,Yes,Farsi (Persian),Early Bilingual
+5/5/23 12:42,5/5/23 13:32,2969,,7579C,20,Female,Female,Not Hispanic or Latino,Multiracial,14 (College Sophmore),Right,Yes,No,,Monolingual
+5/5/23 14:51,5/5/23 15:03,716,,7580,21,Male,Male,Not Hispanic or Latino,Asian,15 (College Junior),Right,No,No,,Monolingual
+5/5/23 14:50,5/5/23 15:04,854,,7478,18,Female,Female,Not Hispanic or Latino,Asian,12 (Completed Highschool),Right,Yes,Yes,Japanese,Early Bilingual

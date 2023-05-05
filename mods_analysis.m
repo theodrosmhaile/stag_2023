@@ -1,7 +1,7 @@
 
 % retrieve responses and span digits
 
-function  [acc_serial_position, acc_total_span] = mods_analysis(Record)
+function  [acc_serial_position, acc_total_span] = mods_analysis(Record, PLT)
 % ------------ serial position
 acc_serial_pos = nan(32,6);
 acc_total      = nan(32,4);
@@ -44,7 +44,7 @@ end
 
 acc_serial_position = mean(acc_serial_pos, 'omitnan');
 acc_total_span      = mean(acc_total,'omitnan');
-
+if PLT
 plot(1:6,acc_serial_position, ...
     '--*', ...
     'LineWidth', 2,...
@@ -54,7 +54,7 @@ ylim([0 1])
 xlabel('span positions')
 ylabel('accuracy')
 title(['subject ', num2str(Record(1).subject_ID) ])
-
+end
 
 
 

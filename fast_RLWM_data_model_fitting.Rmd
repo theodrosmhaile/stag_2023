@@ -224,91 +224,20 @@ sim.learn = sim.mod$set3_learn %>%
 ```
 
 
-```{r similiarity bn n and m trials}
-# hhh %>% 
-#   pivot_wider(names_from = condition, values_from=accuracy ) %>% 
-#   group_by(subjects) %>% 
-#   summarise(set3_r = cor(n3,m3), 
-#             set6_r = cor(n6, m6)) %>% 
-#   pivot_longer(cols = -subjects,names_to = 'condition', values_to = 'r_coef') %>% 
-#   count(condition)
-# 
-#   ggplot(aes(r_coef, fill=condition)) +
-#   #geom_histogram(alpha=.4) +
-#   geom_density(alpha=.4) +
-#  # stat_summary(fun=mean,geom="line",lwd=2) +
-#   facet_wrap(vars(condition))
-#   
-
-
-
-
-```
-
-```{r import process export for analysis in combination}
-if(0) {
-  
-  
-meta_sub_dat <- fromJSON('./processed_wmo/meta_learning_wmo_data_122020.JSON')$data
-
-meta_sub_dat %>% 
-  select(n3) %>% 
-bind_cols()
-  tibble()
-  
-
-
-s.dat.ml=get_data_ml(meta_sub_dat
-            ) %>% 
-  mutate(iteration = str_remove_all(iteration, "[:alpha:]") %>%  
-           as.numeric() )
-
-
-s.dat.ml.avg <- 
-s.dat.ml %>% 
- # filter(subjects=="1f0024") %>%
-  pivot_wider(names_from = condition, values_from = accuracy) %>% 
-  mutate(learn3 = (n3+m3)/2, 
-         learn6 =(n6+m6)/2) %>% 
-  pivot_longer(cols = -c(subjects, iteration), names_to = 'condition', values_to = 'accuracy')
-
-  
-# this saves the averaged first and second half
-s.dat.ml.avg %>% 
-  filter( iteration<13, str_detect(condition, 'lear') | str_detect(condition, 'test')) %>% 
-  unite(col=dat,c( condition, iteration)) %>% 
-  pivot_wider(id_cols = subjects, names_from = dat, values_from = accuracy) %>% 
-  select(subjects,  paste0('learn3_', c(1:12) ),  paste0('learn6_', c(1:12)),  paste0('test3_', c(1:12) ),  paste0('test6_', c(1:12) ) ) %>% 
-  #select(learn6_12) %>% 
-  filter( learn6_12 > .33) %>% 
-  write_csv(file = 'meta_learning_group.csv')
-
-
-#this saves just the first half of the data only
-s.dat.ml %>% 
-filter( iteration<13, str_detect(condition, 'n') | str_detect(condition, 'test')) %>% 
-  unite(col=dat,c( condition, iteration)) %>% 
-  pivot_wider(id_cols = subjects, names_from = dat, values_from = accuracy)  %>% 
-  #select(learn6_12) %>% 
-  filter( n6_12 > .33) %>% 
- write_csv(file = 'meta_learning_group_first_half_dat.csv')
-}
-```
-
 
 ```{r fit models to data: h1h2Together}
 #import subject data
-sdat <-  read_csv('meta_learning_group.csv')
+sdat <-  read_csv('RLWM_data_stag2023_test.csv')
 #sdat <-  read_csv('meta_learning_group_first_half_dat.csv')
 
 
 #import model data
 
 
-RL.sim <- fromJSON('./simulated_data/RL_model/RL_sim_data_07_12_2022.JSON')$data %>% 
+RL.sim <- fromJSON('./simulated_data/RL_model/RL_sim_data_07_12_2022.JSON')$data %>% #RL_sim_data_07_12_2022.JSON
   dplyr::mutate(bias = 0)
 
-LTM.sim <- fromJSON('./simulated_data/LTM_model/LTM_sim_data_02202021.JSON')$data %>% 
+LTM.sim <- fromJSON('./simulated_data/LTM_model/LTM_sim_data_02202021.JSON')$data %>% #LTM_sim_data_02202021.JSON
   dplyr::mutate(bias = 0 )
 
 STR.sim <- fromJSON('./simulated_data/strategy_model/STR_sim_data_032021.JSON')$data %>% 
@@ -318,6 +247,9 @@ META.sim <- fromJSON('./simulated_data/pipe_model/pipe_sim_data_032021.JSON')$da
    dplyr::mutate(bias = strtg,
           bias3 = strtg3,
           bias6 = strtg6, .keep='unused')
+
+
+##### extended sims
 
 
 
@@ -383,11 +315,14 @@ best.fit.idx <-
 
 ```{r best fit counts}
 best.fits %>% 
+  dplyr::count(model) %>% as_tibble()
+
+best.fits %>% 
   dplyr::count(model) %>% 
   ggplot(aes(y=n, fill=model, x=model)) +
   geom_bar(stat = 'identity') +
  # facet_wrap(vars(name)) +
-  scale_fill_brewer(palette = 'Reds')+
+  scale_fill_brewer(palette = 'Set1')+
   ylab('Frequency')+
   #geom_text( aes(y=c(5), label=freq, size=6, fill='red'), check_overlap = T, parse = T) +
   theme_pubclean(base_size = 12) 
@@ -406,11 +341,16 @@ str.bias[best.fit.idx[best.fits$model=='STR','index'] %>%
   count(value) %>% 
   ggplot(aes(x=as.factor(value), y=n)) +
    geom_bar(stat = 'identity') +
-  ggtitle("distribution of proportion of RL used in STR model")
+  ggtitle("distribution of proportion of RL used in STR model") +
+  xlab('RL proportion parameter value (percent)')
+
 
 meta.bias[best.fit.idx[best.fits$model=='META','index'] %>% 
            reduce(rbind)
-           ] %>% as_data_frame() 
+           ] %>% as_data_frame() %>% 
+  ggplot(aes(value)) +
+  geom_histogram() +
+  xlab('meta-RL value')
 
 
 ```
@@ -488,11 +428,12 @@ subject.dat <-
 
   
   
-colnames(subject.dat) = c('subjects',
+colnames(subject.dat) = c(
                           paste0('set3_learn.', c(1:12)),
                           paste0('set6_learn.', c(1:12)),
                           paste0('set3_test.', c(1:12)),
-                          paste0('set6_test.', c(1:12))
+                          paste0('set6_test.', c(1:12)),
+                          'subjects'
                           )
 
   subject.dat %<>%   
@@ -568,6 +509,38 @@ p.model.behav.dat <-
 
 ```
 
+```{r group fit plot}
+group_learn <- p.model.behav.dat %>% 
+  filter(type=='behavioral', phase=='learn') %>% 
+  dplyr::group_by(condition, iteration) %>% 
+  summarise(acc=mean(accuracy), 
+            n=n(), 
+            se= std(accuracy)/sqrt(n)) %>% 
+  ggplot(aes(iteration, acc, group=condition,  color =condition))+
+  geom_point()+
+  geom_errorbar(aes(ymin = acc-se, ymax=acc+se), width=.4)+
+  geom_line() +
+  xlab('Stimulus iteration')+
+  ylab('Accuracy') +
+  ylim(c(0,1))
+  
+group_test <- p.model.behav.dat %>% 
+  filter(type=='behavioral', iteration==12) %>% 
+  dplyr::group_by(condition, iteration, phase) %>% 
+  summarise(acc=mean(accuracy), 
+            n=n(), 
+            se= std(accuracy)/sqrt(n)) %>% 
+  ggplot(aes(phase, acc, group=condition,  color =condition))+
+  geom_point()+
+  geom_errorbar(aes(ymin = acc-se, ymax=acc+se), width=.2)+
+  geom_line() +
+  xlab('Condition')+
+  ylab('Accuracy') +
+  ylim(c(0,1))
+ggarrange(group_learn, group_test, common.legend = T)
+
+```
+
 ```{r subject behavioral model plot, fig.height=13, fig.width=10}
 learn.plt <- p.model.behav.dat %>% 
   filter(phase!='test') %>%
@@ -612,7 +585,7 @@ unite(col='cond.model', c( 'condition','type'),remove = F) %>% #'condition'
  scale_color_brewer(palette = "Paired") +
   theme_pubclean(base_size = 12) +
   ylim(c(0.2,1))+
-    xlab('stimulus iteration') +
+    xlab('condition') +
   theme(legend.position = 'none')
   
 
