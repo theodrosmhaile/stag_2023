@@ -1,43 +1,78 @@
-id,gender,language
-7500,Female,Early Bilingual
-7502,Female,Early Bilingual
-7501,Female,Late Bilingual
-7503,Other,Monolingual
-7505,Female,Monolingual
-7506,Other,Monolingual
-7507,Male,None of the above
-7508,Male,None of the above
-7509,Male,Monolingual
-7512,Female,Monolingual
-7513,Male,Monolingual
-7510,Female,Early Bilingual
-7515,Female,Early Bilingual
-7516,Female,Monolingual
-7517,Female,Monolingual
-7519,Female,Early Bilingual
-7518,Male,Monolingual
-7521,Male,Early Bilingual
-7504,Male,Early Bilingual
-7522,Male,Monolingual
-7523,Male,Late Bilingual
-7525,Female,Early Bilingual
-7514,Female,Monolingual
-7520,Female,Early Bilingual
-7524,Female,None of the above
-7526,Other,Early Bilingual
-7528,Male,Monolingual
-7527,Female,Early Bilingual
-7529,Male,Late Bilingual
-7530,Female,Monolingual
-7532,Female,Monolingual
-7531,Female,Early Bilingual
-7535,Female,Late Bilingual
-7533,Female,Early Bilingual
-7536,Female,Monolingual
-7537,Male,Monolingual
-7540,Male,Early Bilingual
-7538,Female,Early Bilingual
-7542,Male,Early Bilingual
-7541,Female,Early Bilingual
-7511,Female,Monolingual
-,,
+screen_name,age,gender,language
+7500,19,Female,Early Bilingual
+7501,22,Female,Late Bilingual
+7502,20,Female,Early Bilingual
+7503,24,Female,Monolingual
+7504,19,Male,Early Bilingual
+7505,18,Female,Monolingual
+7506,19,Female,Monolingual
+7507,24,Male,None of the above
+7508,20,Male,None of the above
+7509,18,Male,Monolingual
+7510,20,Female,Early Bilingual
+7511,19,Female,Monolingual
+7512,19,Female,Monolingual
+7513,19,Male,Monolingual
+7514,18,Female,Monolingual
+7515,18,Female,Early Bilingual
+7516,18,Female,Monolingual
+7517,18,Female,Monolingual
+7518,18,Male,Monolingual
+7519,18,Female,Early Bilingual
+7520,19,Male,Early Bilingual
+7520,19,Female,Early Bilingual
+7522,21,Male,Monolingual
+7523,22,Male,Late Bilingual
+7524,19,Female,None of the above
+7525,18,Female,Early Bilingual
+7526,19,Female,Early Bilingual
+7527,22,Female,Early Bilingual
+7528,19,Male,Monolingual
+7529,19,Male,Late Bilingual
+7530,19,Female,Monolingual
+7531,18,Female,Early Bilingual
+7532,20,Female,Monolingual
+7533,19,Female,Early Bilingual
+7535,21,Female,Late Bilingual
+7536,19,Female,Monolingual
+7537,21,Female,Monolingual
+7538,22,Female,Early Bilingual
+7539,19,Female,Early Bilingual
+7540,22,Male,Early Bilingual
+7541,22,Female,Early Bilingual
+7542,19,Male,Early Bilingual
+7543,20,Prefer not to answer,Monolingual
+7544,19,Female,Monolingual
+7545,22,Female,Early Bilingual
+7546,18,Female,Early Bilingual
+7547,18,Male,Early Bilingual
+7548,19,Male,None of the above
+7549,35,Female,Monolingual
+7550,22,Male,Late Bilingual
+7551,21,Male,Early Bilingual
+7552,19,Male,Early Bilingual
+7553,21,Female,Monolingual
+7554,20,Male,Early Bilingual
+7555,20,Female,Late Bilingual
+7556,18,Female,Early Bilingual
+7557,21,Female,Monolingual
+7558,19,Female,Monolingual
+7559,20,Male,Late Bilingual
+7560,18,Male,Early Bilingual
+7561,19,Male,Monolingual
+7562,20,Female,None of the above
+7563,21,Female,Early Bilingual
+7564,22,Female,Monolingual
+7565,18,Male,Early Bilingual
+7566,18,Female,Monolingual
+7567,22,Female,Late Bilingual
+7568,19,Female,Monolingual
+7569,20,Male,Early Bilingual
+7570,19,Female,Monolingual
+7572,19,Male,Monolingual
+7573,19,Female,Early Bilingual
+7574,19,Female,Monolingual
+7575,19,Female,Early Bilingual
+7577,18,Female,Early Bilingual
+7579,20,Female,Monolingual
+7580,21,Male,Monolingual
