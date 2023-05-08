@@ -186,7 +186,7 @@ accuracy_maps <- maps_raw_data %>%
   summarize(maps_mean_accuracy = mean(correct))
 maps_avg <- full_join(maps_avg, accuracy_maps)
 #combining data=====================================
-master_data <- full_join(maps_avg, candy_avg) %>%
+master_data <- df[duplicated(df$value), ](maps_avg, candy_avg) %>%
   group_by(screenName, maps_first, language)
 # master_data$maps_first <- ifelse(master_data$maps_first == FALSE, "Candy First",
 #                                  master_data$maps_first)
@@ -208,12 +208,42 @@ master_data <- left_join(master_data, candy_time)
 
 dups <- master_data[duplicated(master_data$screenName), ]
 #what is this????????????
+#take out 7541 (missing maps), 7532, 7519(weird collins)
 
-candy_avg_plot <- plot_ly(master_data, x = ~language, color = ~maps_first, hoverinfo = "none") %>%
-  add_trace(y = ~mean(maps_mean_rof), type = "bar") %>%
-  layout(barmode = "group")
+# candy_avg_plot <- plot_ly(master_data, x = ~language, color = ~maps_first, hoverinfo = "none") %>%
+#   add_trace(y = ~mean(maps_mean_rof), type = "bar") %>%
+#   layout(barmode = "group")
+master_data %>% 
+  pivot_longer(cols = c(mapsBeforeNoon, candyBeforeNoon), names_to = 'category', values_to = 'BeforeNoon'
+  )%>%
+  pivot_longer(cols=c(candy_mean_accuracy, maps_mean_accuracy), names_to = 'cat2', values_to = 'accuracy')#%>%
+  lm(accuracy ~ category, Beforenoon) 
+
+  acc = master_data %>% ungroup() %>%  select(candy_mean_accuracy, maps_mean_accuracy) %>% 
+    pivot_longer(cols=c(candy_mean_accuracy, maps_mean_accuracy), names_to = 'cat2', values_to = 'accuracy') %>% 
+    separate(cat2, into = 'category', remove = T)
+  
+ befrNoon = master_data %>% ungroup() %>% select(mapsBeforeNoon, candyBeforeNoon) %>% 
+    pivot_longer(cols = c(mapsBeforeNoon, candyBeforeNoon), names_to = 'cat2', values_to = 'BeforeNoon') %>% 
+   separate(cat2, into = 'category', remove = T, sep='B')
+    
+   
+  acc_by_time = inner_join(acc, befrNoon, by='category') %>% 
+    unique() %>% drop_na()
+  
+  acc_by_time %>% 
+    lm( accuracy ~ category * BeforeNoon, data  = . ) %>% 
+    anova()
+  
+  acc_by_time %>% 
+    # filter(category=='Maps') %>% 
+    group_by(category, BeforeNoon) %>% 
+    summarize(m=mean(accuracy), n=n(), 
+              se = sd(accuracy)/sqrt(n))
+  
+  
+#figure out what's happening w grouping 
 
 
-
-
-
+#one column: m/c, one column: beforenoon 1/2 
+#look only at first, label before noon or after noon
