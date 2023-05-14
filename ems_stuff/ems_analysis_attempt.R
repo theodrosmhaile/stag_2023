@@ -219,14 +219,15 @@ master_data %>%
   pivot_longer(cols=c(candy_mean_accuracy, maps_mean_accuracy), names_to = 'cat2', values_to = 'accuracy')#%>%
   lm(accuracy ~ category, Beforenoon) 
 
-  acc = master_data %>% ungroup() %>%  select(candy_mean_accuracy, maps_mean_accuracy) %>% 
+  acc <- master_data %>% ungroup() %>%  select(candy_mean_accuracy, maps_mean_accuracy) %>% 
     pivot_longer(cols=c(candy_mean_accuracy, maps_mean_accuracy), names_to = 'cat2', values_to = 'accuracy') %>% 
     separate(cat2, into = 'category', remove = T)
   
- befrNoon = master_data %>% ungroup() %>% select(mapsBeforeNoon, candyBeforeNoon) %>% 
+ befrNoon <- master_data %>% ungroup() %>% select(mapsBeforeNoon, candyBeforeNoon) %>% 
     pivot_longer(cols = c(mapsBeforeNoon, candyBeforeNoon), names_to = 'cat2', values_to = 'BeforeNoon') %>% 
    separate(cat2, into = 'category', remove = T, sep='B')
     
+ test <- inner_join(acc, befrNoon, by='category')
    
   acc_by_time = inner_join(acc, befrNoon, by='category') %>% 
     unique() %>% drop_na()
