@@ -12,6 +12,7 @@ library("viridis")
 library("plotly")
 library("knitr")
 library("readr")
+library("htmltools")
 # SlimStampen
 # uncomment "install.packages", "uncomment devtools" code
 # install.packages("devtools") # Install SlimStampen packages. Instructions on https://github.com/VanRijnLab/SlimStampeRData
@@ -224,6 +225,8 @@ dups <- master_data[duplicated(master_data$screenName), ]
 #   pivot_longer(cols=c(candy_mean_accuracy, maps_mean_accuracy), names_to = 'cat2', values_to = 'accuracy')#%>%
 #   lm(accuracy ~ category, Beforenoon) 
 
+#accuracy comparision, category and time=================================================
+
 acc <- master_data %>% ungroup() %>%  select(candy_mean_accuracy, maps_mean_accuracy) %>% 
   pivot_longer(cols=c(candy_mean_accuracy, maps_mean_accuracy), names_to = 'cat2', values_to = 'accuracy') %>% 
   separate(cat2, into = 'category', remove = T) %>%
@@ -258,6 +261,39 @@ acc_by_time_df <- inner_join(acc, befrNoon, by='screenName', "category") %>%
  
  acc_by_time <- lm(accuracy ~ category * BeforeNoon, data  = acc_by_time_df ) %>% 
    anova()
+ 
+ mean_acc_time_lang <- acc_by_time_df %>%
+   group_by(BeforeNoon, category) %>%
+   reframe(mean_accuracy = mean(accuracy), se = sd(accuracy)/sqrt(nrow(.)), BeforeNoon, category) %>%
+   unique() 
+for (i in 1:nrow(mean_acc_time_lang)){
+  if(mean_acc_time_lang$BeforeNoon[i] == F){
+    mean_acc_time_lang$BeforeNoon[i] <- "After Noon"
+  } else{
+    mean_acc_time_lang$BeforeNoon[i] <- "Before Noon"
+  }
+}
+ 
+acc_by_time_plot_lines <- plot_ly(mean_acc_time_lang, x = ~category, color = mean_acc_time_lang$BeforeNoon) %>%
+   add_trace(y= ~mean_acc_time_lang$mean_accuracy, type = "scatter", mode = "lines+markers")%>%
+   layout(yaxis = list(title = "Mean Accuracy"),
+          xaxis = list(title = "Test Type"))
+acc_by_time_plot_lines
+
+# acc_by_time_plot_bar <- plot_ly(mean_acc_time_lang, x = ~category, color = mean_acc_time_lang$BeforeNoon) %>%
+#   add_trace(y= ~mean_acc_time_lang$mean_accuracy, type = "bar")%>%
+#   layout(yaxis = list(title = "Mean Accuracy"),
+#          xaxis = list(title = "Test Type")) %>%
+#   add_errorbars(y = ~se)
+# acc_by_time_plot_bar
+
+acc_by_time_plot_bar <- ggplot(mean_acc_time_lang, aes(x = category, y = mean_accuracy, fill = BeforeNoon)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  geom_errorbar(aes(ymin = mean_accuracy - se, ymax = mean_accuracy + se), 
+                width = 0.3, position = position_dodge(0.9)) +
+  theme_minimal() +
+  labs(fill = "Time of Day")
+acc_by_time_plot_bar
   
 #figure out what's happening w grouping 
 
@@ -285,8 +321,22 @@ acc_by_time_df <- inner_join(acc, befrNoon, by='screenName', "category") %>%
 
  
 acc_first_only_df <- bind_rows(cfirst, mfirst) 
-acc_first_only <- lm(accuracy ~ BeforeNoon, data = acc_first_only) %>%
+acc_first_only_df <- acc_first_only_df[-2]
+acc_first_only <- lm(accuracy ~ BeforeNoon, data = acc_first_only_df) %>%
   anova()
+
+mean_acc_first <- acc_first_only_df %>%
+  group_by(BeforeNoon) %>%
+  reframe(mean_accuracy = mean(accuracy), BeforeNoon) %>%
+  unique()
+
+acc_first_only_plot <- plot_ly(mean_acc_first,
+  x = ~BeforeNoon, color = mean_acc_first$BeforeNoon) %>%
+  add_trace(y= ~mean_acc_first$mean_accuracy, type = "bar", showlegend = F)%>%
+  layout(yaxis = list(title = "Mean Accuracy for First Test"),
+         xaxis = list(title = "Done Before Noon?"))
+
+acc_first_only_plot
 
 #language test=================================================================
 
@@ -294,26 +344,38 @@ acc_lang_df <- master_data %>% ungroup() %>%  select(candy_mean_accuracy, maps_m
   pivot_longer(cols=c(candy_mean_accuracy, maps_mean_accuracy), names_to = 'cat2', values_to = 'accuracy') %>% 
   separate(cat2, into = 'category', remove = T) %>%
   mutate(screenName = rep(master_data$screenName, each = 2), .before = "category") %>%
-  mutate(language = rep(master_data$language, each = 2))
+  mutate(language = rep(master_data$language, each = 2)) %>%
+  na.omit() %>%
+  group_by(screenName) %>%
+  summarize(accuracy = mean(accuracy), language) %>%
+  unique()
 
-acc_lang <- lm(accuracy ~ language * category, data = acc_lang_df) %>%
+acc_lang <- lm(accuracy ~ language, data = acc_lang_df) %>%
   anova()
+
+mean_acc = reframe(acc_lang_df %>% group_by(language), 
+                "Mean Accuracy" = mean(accuracy), language) %>%
+  unique()
+
+acc_lang_plot <- plot_ly(mean_acc, x = ~language, color = mean_acc$language) %>%
+  add_trace(y= ~mean_acc$`Mean Accuracy`, type = "bar", showlegend = F)%>%
+  layout(yaxis = list(title = "Mean Accuracy Across Tests"),
+         xaxis = list(title = "Language Category"))
+
+acc_lang_plot
+
+# test_table <- knitr::kable(acc_lang) 
+# print(test_table)
 
 #language just mono or bi======================================================
 #this is p-hacking lolololol
-mono_bi <- master_data %>%
+mono_bi <- acc_lang_df %>%
   subset(language != "None of the above")
 
-acc_cleaned_lang_df <- mono_bi %>% ungroup() %>%  select(candy_mean_accuracy, maps_mean_accuracy) %>% 
-  pivot_longer(cols=c(candy_mean_accuracy, maps_mean_accuracy), names_to = 'cat2', values_to = 'accuracy') %>% 
-  separate(cat2, into = 'category', remove = T) %>%
-  mutate(screenName = rep(mono_bi$screenName, each = 2), .before = "category") %>%
-  mutate(language = rep(mono_bi$language, each = 2))
-
-acc_cleaned_lang <- lm(accuracy ~ language * category, data = acc_cleaned_lang_df) %>%
+acc_mono_bi_lang <- lm(accuracy ~ language, data = mono_bi) %>%
   anova()
  
 
- 
+#need to put error bars and do rof
  
  
