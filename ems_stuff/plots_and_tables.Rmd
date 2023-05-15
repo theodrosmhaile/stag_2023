@@ -1,0 +1,98 @@
+---
+title: "Stag"
+css: style.css
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+source("ems_analysis_attempt.R")
+library("kableExtra")
+starred_table <- function(df){
+  df$Significance <- ifelse(df$`Pr(>F)` < 0.05, "*", "")
+  df <- df %>% rename("p value" = "Pr(>F)")
+  output <- kable(df, align = "c", format = "html", caption = "ANOVA") %>%
+  kable_styling() %>%
+  column_spec(6, bold = T) 
+  return(output)
+}
+```
+
+## Accuracy
+### Master Plot
+```{r accuracy0, echo=F, warning=F}
+acc_master_plot
+```
+
+
+### Time of Day and Test Category
+
+```{r accuracy1, echo=F, warning=F}
+#time and cat
+acc_by_time_plot_bar
+starred_table(acc_by_time)
+```
+### First Test only and Time of Day
+
+```{r accuracy2, echo=F, warning=F}
+#time and first test
+acc_first_only_plot
+starred_table(acc_first_only)
+```
+
+### Language
+
+```{r accuracy3, echo=FALSE, warning=F}
+acc_lang_plot
+starred_table(acc_lang)
+kable(tukey_lang$language, align = "c", format = "html", caption = "Pairwise Comparisons (for fun)") %>%
+  kable_styling()
+```
+## RoF
+### Master Plot
+```{r rof0, echo=F, warning=F}
+rof_master_plot
+```
+
+### Time of Day and Test Category 
+```{r rof1, echo=F, warning=F}
+plot_two(rof_by_time_cat_df, "category", "rof", "BeforeNoon", " ", " ", "Average Rate of Forgetting", "Time of Day")
+starred_table(
+  lm(rof ~ category * BeforeNoon, data  = rof_by_time_cat_df ) %>% 
+   anova() 
+)
+```
+### First Test Only and Time of Day
+```{r rof2, echo=F, warning=F}
+plot_one(rof_first_only_df, "BeforeNoon", "rof", " ", " ", "Average Rate of Forgetting")
+starred_table(
+  lm(rof ~ BeforeNoon, data  = rof_first_only_df ) %>% 
+   anova() 
+)
+```
+
+### Language
+```{r rof3, echo=F, warning=F}
+plot_one(rof_master_df, "language", "mean_rof", " ", " ", "Average Rate of Forgetting")
+starred_table(
+  lm(mean_rof ~ language, data  = rof_master_df) %>% 
+   anova() 
+)
+kable(tukey_rof_lang$language, align = "c", format = "html", caption = "Pairwise Comparisons (for fun)") %>%
+  kable_styling()
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

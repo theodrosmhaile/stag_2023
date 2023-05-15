@@ -24,10 +24,39 @@ library("htmltools")
 # The console will show a prompt asking whether all packages should be updated. Select option 1 (by typing 1 and then pressing enter), this will update all packages.
 #vignette("SlimStampeRVignette")
 
-
+#functions for untility========================================================
 # function to capitalize the first letter of a word
 capitalize_word <- function(word) {
   paste0(toupper(substr(word, 1, 1)), substr(word, 2, nchar(word)))
+}
+
+#function for making barplot with one IV
+plot_one <- function(df, x, y, title, xaxis, yaxis){
+  new_df <- df %>% group_by(!!sym(x)) %>% 
+    reframe(mean = mean(!!sym(y)), !!sym(x), se = sd(!!sym(y))/sqrt(nrow(.))) %>%
+    unique()
+  plot <- ggplot(new_df, aes(x = !!sym(x), y = mean, fill = !!sym(x))) +
+    geom_bar(stat = "identity", position = "dodge") +
+    geom_errorbar(aes(ymin = mean - se, ymax = mean + se), 
+                  width = 0.1, position = position_dodge(0.9)) +
+    theme_minimal() +
+    labs(title = title, x = xaxis, y = yaxis) +
+    theme(legend.position = "none")
+  return(plot)
+}
+
+#function for making barplot with two IVs
+plot_two <- function(df, x, y, z, title, xaxis, yaxis, legend){
+  new_df <- df %>% group_by(!!sym(x), !!sym(z)) %>% 
+    reframe(mean = mean(!!sym(y)), !!sym(x), !!sym(z), se = sd(!!sym(y))/sqrt(nrow(.))) %>%
+    unique()
+  plot <- ggplot(new_df, aes(x = !!sym(x), y = mean, fill = !!sym(z))) +
+    geom_bar(stat = "identity", position = "dodge") +
+    geom_errorbar(aes(ymin = mean - se, ymax = mean + se), 
+                  width = 0.1, position = position_dodge(0.9)) +
+    theme_minimal() +
+    labs(title = title, x = xaxis, y = yaxis, fill = legend) 
+  return(plot)
 }
 
 #Categorize as monolingual/bilingual, but keep data on early vs late acquisition for bilingual ? 
@@ -46,10 +75,6 @@ langs <- subset(langs, !duplicated(langs)) #removing dups
 #take out 7541 (missing maps), 7532, 7519(weird collins)
 candy_raw_data <- read_dataset("behavioral_data_raw/slim/9856_Candy_responses.csv") %>%
   rename("presentationStartTime" = "presentation_start_time")
-candy_raw_data <- candy_raw_data %>%
-  filter(screen_name != "7541") %>%
-  filter(screen_name != "7532") %>%
-  filter(screen_name != "7519")
   
   # subset(master_data$screenName != "7532") %>%
   # subset(master_data$screenName != "7519")
@@ -80,10 +105,6 @@ colnames(candy_raw_data) <- new_col_names
 #repeat for maps========================================================
 maps_raw_data <- read_dataset("behavioral_data_raw/slim/9857_Maps_responses.csv") %>%
   rename("presentationStartTime" = "presentation_start_time")
-maps_raw_data <- maps_raw_data %>%
-  filter(screen_name != "7541") %>%
-  filter(screen_name != "7532") %>%
-  filter(screen_name != "7519")
 
 # set the new column names
 colnames(maps_raw_data) <- new_col_names
@@ -201,7 +222,10 @@ maps_avg <- full_join(maps_avg, accuracy_maps)
 #combining data=====================================
 master_data <- maps_avg
 master_data <- full_join(master_data, candy_avg) %>%
-  group_by(screenName, maps_first, language)
+  group_by(screenName, maps_first, language) %>%
+  filter(screenName != "7541") %>%
+  filter(screenName != "7532") %>%
+  filter(screenName != "7519")
 
 
 #adding columns for time they *started* the task
@@ -213,6 +237,21 @@ candy_time <- subset(candy_raw_data, !duplicated(screenName)) %>%
 candy_time <- candy_time[4:5]
 master_data <- left_join(master_data, map_time)
 master_data <- left_join(master_data, candy_time)
+#changing TOD column values
+for (i in 1:nrow(master_data)){
+  if(master_data$mapsBeforeNoon[i] == F){
+    master_data$mapsBeforeNoon[i] <- "After Noon"
+  } else{
+    master_data$mapsBeforeNoon[i] <- "Before Noon"
+  }
+}
+for (i in 1:nrow(master_data)){
+  if(master_data$candyBeforeNoon[i] == F){
+    master_data$candyBeforeNoon[i] <- "After Noon"
+  } else{
+    master_data$candyBeforeNoon[i] <- "Before Noon"
+  }
+}
 
 dups <- master_data[duplicated(master_data$screenName), ]
 
@@ -225,7 +264,7 @@ dups <- master_data[duplicated(master_data$screenName), ]
 #   pivot_longer(cols=c(candy_mean_accuracy, maps_mean_accuracy), names_to = 'cat2', values_to = 'accuracy')#%>%
 #   lm(accuracy ~ category, Beforenoon) 
 
-#accuracy comparision, category and time=================================================
+#accuracy comparison, category and time=================================================
 
 acc <- master_data %>% ungroup() %>%  select(candy_mean_accuracy, maps_mean_accuracy) %>% 
   pivot_longer(cols=c(candy_mean_accuracy, maps_mean_accuracy), names_to = 'cat2', values_to = 'accuracy') %>% 
@@ -264,15 +303,9 @@ acc_by_time_df <- inner_join(acc, befrNoon, by='screenName', "category") %>%
  
  mean_acc_time_lang <- acc_by_time_df %>%
    group_by(BeforeNoon, category) %>%
-   reframe(mean_accuracy = mean(accuracy), se = sd(accuracy)/sqrt(nrow(.)), BeforeNoon, category) %>%
+   reframe(mean_accuracy = mean(accuracy), se = sd(accuracy)/sqrt(nrow(.)/2), BeforeNoon, category) %>%
    unique() 
-for (i in 1:nrow(mean_acc_time_lang)){
-  if(mean_acc_time_lang$BeforeNoon[i] == F){
-    mean_acc_time_lang$BeforeNoon[i] <- "After Noon"
-  } else{
-    mean_acc_time_lang$BeforeNoon[i] <- "Before Noon"
-  }
-}
+
  
 acc_by_time_plot_lines <- plot_ly(mean_acc_time_lang, x = ~category, color = mean_acc_time_lang$BeforeNoon) %>%
    add_trace(y= ~mean_acc_time_lang$mean_accuracy, type = "scatter", mode = "lines+markers")%>%
@@ -290,12 +323,10 @@ acc_by_time_plot_lines
 acc_by_time_plot_bar <- ggplot(mean_acc_time_lang, aes(x = category, y = mean_accuracy, fill = BeforeNoon)) +
   geom_bar(stat = "identity", position = "dodge") +
   geom_errorbar(aes(ymin = mean_accuracy - se, ymax = mean_accuracy + se), 
-                width = 0.3, position = position_dodge(0.9)) +
+                width = 0.2, position = position_dodge(0.9)) +
   theme_minimal() +
-  labs(fill = "Time of Day")
+  labs(fill = "Time of Day", title = " ", x= " ", y = "Mean Accuracy")
 acc_by_time_plot_bar
-  
-#figure out what's happening w grouping 
 
 
 #one column: m/c, one column: beforenoon 1/2 
@@ -327,41 +358,78 @@ acc_first_only <- lm(accuracy ~ BeforeNoon, data = acc_first_only_df) %>%
 
 mean_acc_first <- acc_first_only_df %>%
   group_by(BeforeNoon) %>%
-  reframe(mean_accuracy = mean(accuracy), BeforeNoon) %>%
-  unique()
+  reframe(mean_accuracy = mean(accuracy), BeforeNoon, se = sd(accuracy)/sqrt(nrow(.)) ) %>%
+  unique() 
 
-acc_first_only_plot <- plot_ly(mean_acc_first,
-  x = ~BeforeNoon, color = mean_acc_first$BeforeNoon) %>%
-  add_trace(y= ~mean_acc_first$mean_accuracy, type = "bar", showlegend = F)%>%
-  layout(yaxis = list(title = "Mean Accuracy for First Test"),
-         xaxis = list(title = "Done Before Noon?"))
 
+# acc_first_only_plot <- plot_ly(mean_acc_first,
+#   x = ~BeforeNoon, color = mean_acc_first$BeforeNoon) %>%
+#   add_trace(y= ~mean_acc_first$mean_accuracy, type = "bar", showlegend = F)%>%
+#   layout(yaxis = list(title = "Mean Accuracy for First Test"),
+#          xaxis = list(title = "Done Before Noon?"))
+# acc_first_only_plot
+
+mean_acc_first$BeforeNoon <- factor(mean_acc_first$BeforeNoon, levels = c("Before Noon", "After Noon"))
+
+acc_first_only_plot <- ggplot(mean_acc_first, aes(x = BeforeNoon, y = mean_accuracy, fill = BeforeNoon)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  geom_errorbar(aes(ymin = mean_accuracy - se, ymax = mean_accuracy + se), 
+                width = 0.1, position = position_dodge(0.9)) +
+  theme_minimal() +
+  labs(title = " ", x = " ", y = "Mean Accuracy") +
+  theme(legend.position = "none")
 acc_first_only_plot
 
 #language test=================================================================
 
-acc_lang_df <- master_data %>% ungroup() %>%  select(candy_mean_accuracy, maps_mean_accuracy) %>% 
+acc_master_df <- master_data %>% ungroup() %>%  select(candy_mean_accuracy, maps_mean_accuracy) %>% 
   pivot_longer(cols=c(candy_mean_accuracy, maps_mean_accuracy), names_to = 'cat2', values_to = 'accuracy') %>% 
   separate(cat2, into = 'category', remove = T) %>%
   mutate(screenName = rep(master_data$screenName, each = 2), .before = "category") %>%
-  mutate(language = rep(master_data$language, each = 2)) %>%
+  mutate(language = rep(master_data$language, each = 2))
+acc_master_df <- inner_join(acc_master_df, befrNoon, by='screenName', "category",) %>%
+  subset(category.x == category.y) %>%
+  select(screenName, category.x, accuracy, BeforeNoon, language) %>%
+  rename("category" = "category.x") %>%
   na.omit() %>%
-  group_by(screenName) %>%
-  summarize(accuracy = mean(accuracy), language) %>%
+  group_by(language, category, BeforeNoon) %>%
+  reframe(mean_accuracy = mean(accuracy), language, category, BeforeNoon, se = sd(accuracy)/sqrt(nrow(.)/2)) %>%
+  unique()
+acc_master_df$se[is.na(acc_master_df$se)] <- 0
+
+acc_lang <- lm(mean_accuracy ~ language, data = acc_master_df) %>%
+anova()
+
+tukey_lang <- aov(mean_accuracy ~ language, data = acc_master_df) %>%
+  TukeyHSD() %>%
+  print()
+
+mean_lang <- acc_master_df %>% group_by(language) %>%
+  reframe(mean_accuracy = mean(mean_accuracy), language, se = mean(se)) %>%
   unique()
 
-acc_lang <- lm(accuracy ~ language, data = acc_lang_df) %>%
-  anova()
+# acc_lang_plot <- plot_ly(mean_acc, x = ~language, color = mean_acc$language) %>%
+#   add_trace(y= ~mean_acc$`Mean Accuracy`, type = "bar", showlegend = F)%>%
+#   layout(yaxis = list(title = "Mean Accuracy Across Tests"),
+#          xaxis = list(title = "Language Category"))
 
-mean_acc = reframe(acc_lang_df %>% group_by(language), 
-                "Mean Accuracy" = mean(accuracy), language) %>%
-  unique()
+acc_master_plot <- ggplot(acc_master_df, aes(x = language, y = mean_accuracy, fill = BeforeNoon)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  facet_grid(~category) +
+  geom_errorbar(aes(ymin = mean_accuracy - se, ymax = mean_accuracy + se), 
+                width = 0.1, position = position_dodge(0.9)) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(x = " ", y = "Mean Accuracy", fill = "Time of Day")
+acc_master_plot
 
-acc_lang_plot <- plot_ly(mean_acc, x = ~language, color = mean_acc$language) %>%
-  add_trace(y= ~mean_acc$`Mean Accuracy`, type = "bar", showlegend = F)%>%
-  layout(yaxis = list(title = "Mean Accuracy Across Tests"),
-         xaxis = list(title = "Language Category"))
-
+acc_lang_plot <- ggplot(mean_lang, aes(x = language, y = mean_accuracy, fill = language)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  geom_errorbar(aes(ymin = mean_accuracy - se, ymax = mean_accuracy + se), 
+                width = 0.1, position = position_dodge(0.9)) +
+  theme_minimal() +
+  labs(title = " ", x = " ", y = "Mean Accuracy") +
+  theme(legend.position = "none")
 acc_lang_plot
 
 # test_table <- knitr::kable(acc_lang) 
@@ -369,13 +437,95 @@ acc_lang_plot
 
 #language just mono or bi======================================================
 #this is p-hacking lolololol
-mono_bi <- acc_lang_df %>%
-  subset(language != "None of the above")
-
-acc_mono_bi_lang <- lm(accuracy ~ language, data = mono_bi) %>%
-  anova()
+# mono_bi <- acc_lang_df %>%
+#   subset(language != "None of the above")
+# 
+# acc_mono_bi_lang <- lm(accuracy ~ language, data = mono_bi) %>%
+#   anova()
  
 
 #need to put error bars and do rof
  
- 
+
+test <- plot_two(acc_by_time_df, "category", "accuracy", "BeforeNoon", "Title", "X", "Y", "Legend")
+test 
+
+#ROF=======================================================================
+rof_master_df <- master_data %>% ungroup() %>%  select(candy_mean_rof, maps_mean_rof) %>% 
+  pivot_longer(cols=c(candy_mean_rof, maps_mean_rof), names_to = 'cat2', values_to = 'rof') %>% 
+  separate(cat2, into = 'category', remove = T) %>%
+  mutate(screenName = rep(master_data$screenName, each = 2), .before = "category") %>%
+  mutate(language = rep(master_data$language, each = 2))
+rof_master_df <- inner_join(rof_master_df, befrNoon, by='screenName', "category",) %>%
+  subset(category.x == category.y) %>%
+  select(screenName, category.x, rof, BeforeNoon, language) %>%
+  rename("category" = "category.x") %>%
+  na.omit() %>%
+  group_by(language, category, BeforeNoon) %>%
+  reframe(mean_rof = mean(rof), language, category, BeforeNoon, se = sd(rof)/sqrt(nrow(.)/2)) %>%
+  unique()
+rof_master_df$se[is.na(rof_master_df$se)] <- 0
+
+rof_master_plot <- ggplot(rof_master_df, aes(x = language, y = mean_rof, fill = BeforeNoon)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  facet_grid(~category) +
+  geom_errorbar(aes(ymin = mean_rof - se, ymax = mean_rof + se), 
+                width = 0.1, position = position_dodge(0.9)) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(x = " ", y = "Mean Rate of Forgetting", fill = "Time of Day")
+rof_master_plot
+
+#time and cat
+rof <- master_data %>% ungroup() %>%  select(candy_mean_rof, maps_mean_rof) %>% 
+  pivot_longer(cols=c(candy_mean_rof, maps_mean_rof), names_to = 'cat2', values_to = 'rof') %>% 
+  separate(cat2, into = 'category', remove = T) %>%
+  mutate(screenName = rep(master_data$screenName, each = 2), .before = "category")
+
+rof_by_time_cat_df <- inner_join(rof, befrNoon, by='screenName', "category") %>%
+  subset(category.x == category.y) %>%
+  select(category.x, rof, BeforeNoon) %>%
+  rename("category" = "category.x") %>%
+  na.omit()
+
+#first only
+r_cfirst_x <- subset(master_data, master_data$candy_first == T)
+r_cfirst <- cfirst_x %>% ungroup() %>%  
+  select(candy_mean_rof) %>% 
+  pivot_longer(cols=c(candy_mean_rof), names_to = 'cat2', values_to = 'rof') %>% 
+  separate(cat2, into = 'category', remove = T) %>%
+  mutate(screenName = rep(cfirst_x$screenName), .before = "category") %>%
+  mutate(BeforeNoon = cfirst_x$candyBeforeNoon)
+
+
+r_mfirst_x <- subset(master_data, master_data$maps_first == T)
+r_mfirst <- mfirst_x %>% ungroup() %>%  
+  select(maps_mean_rof) %>% 
+  pivot_longer(cols=c(maps_mean_rof), names_to = 'cat2', values_to = 'rof') %>% 
+  separate(cat2, into = 'category', remove = T) %>%
+  mutate(screenName = rep(mfirst_x$screenName), .before = "category") %>%
+  mutate(BeforeNoon = mfirst_x$mapsBeforeNoon)
+
+
+rof_first_only_df <- bind_rows(r_cfirst, r_mfirst)
+
+#language
+rof_lang_df <- rof_master_df %>% group_by(language) %>%
+  reframe(mean_rof = mean(mean_rof), language, se = mean(se)) %>%
+  unique()
+
+tukey_rof_lang <- aov(mean_rof ~ language, data = rof_master_df) %>%
+  TukeyHSD() %>%
+  print()
+
+#cat
+
+rof_cat_df <- rof_master_df %>% group_by(category) %>%
+  reframe(mean_rof = mean(mean_rof), category, se = mean(se)) %>%
+  unique()
+
+tukey_rof_cat <- aov(mean_rof ~ category, data = rof_master_df) %>%
+  TukeyHSD() %>%
+  print()
+
+
