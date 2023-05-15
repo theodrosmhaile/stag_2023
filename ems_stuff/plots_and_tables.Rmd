@@ -1,6 +1,7 @@
 ---
-title: "Stag"
-css: style.css
+title: "STAG"
+output:
+  html_document
 ---
 
 ```{r setup, include=FALSE}
@@ -17,12 +18,34 @@ starred_table <- function(df){
 }
 ```
 
+```{r demograhics, include=F}
+demo_lang <- master_data %>% ungroup() %>%
+  count(master_data$language) %>%
+  rename("language" = "master_data$language")
+
+demo_time <- acc_first_only_df %>% ungroup() %>%
+  count(acc_first_only_df$BeforeNoon) %>%
+  rename("Time" = "acc_first_only_df$BeforeNoon")
+```
+
+## Demographics
+
+#### n total = `r nrow(master_data)`
+
+```{r demostuff, echo=F}
+kable(demo_lang, align = "l", format = "html") %>%
+  kable_styling()
+kable(demo_time, align = "l", format = "html") %>%
+  kable_styling()
+```
+
 ## Accuracy
+
 ### Master Plot
+
 ```{r accuracy0, echo=F, warning=F}
 acc_master_plot
 ```
-
 
 ### Time of Day and Test Category
 
@@ -31,6 +54,7 @@ acc_master_plot
 acc_by_time_plot_bar
 starred_table(acc_by_time)
 ```
+
 ### First Test only and Time of Day
 
 ```{r accuracy2, echo=F, warning=F}
@@ -47,13 +71,17 @@ starred_table(acc_lang)
 kable(tukey_lang$language, align = "c", format = "html", caption = "Pairwise Comparisons (for fun)") %>%
   kable_styling()
 ```
+
 ## RoF
+
 ### Master Plot
+
 ```{r rof0, echo=F, warning=F}
 rof_master_plot
 ```
 
-### Time of Day and Test Category 
+### Time of Day and Test Category
+
 ```{r rof1, echo=F, warning=F}
 plot_two(rof_by_time_cat_df, "category", "rof", "BeforeNoon", " ", " ", "Average Rate of Forgetting", "Time of Day")
 starred_table(
@@ -61,7 +89,9 @@ starred_table(
    anova() 
 )
 ```
+
 ### First Test Only and Time of Day
+
 ```{r rof2, echo=F, warning=F}
 plot_one(rof_first_only_df, "BeforeNoon", "rof", " ", " ", "Average Rate of Forgetting")
 starred_table(
@@ -71,6 +101,7 @@ starred_table(
 ```
 
 ### Language
+
 ```{r rof3, echo=F, warning=F}
 plot_one(rof_master_df, "language", "mean_rof", " ", " ", "Average Rate of Forgetting")
 starred_table(
@@ -80,19 +111,3 @@ starred_table(
 kable(tukey_rof_lang$language, align = "c", format = "html", caption = "Pairwise Comparisons (for fun)") %>%
   kable_styling()
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
