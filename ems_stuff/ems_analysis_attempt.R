@@ -42,8 +42,16 @@ langs <- langs[,-3] #removing gender column
 langs <- subset(langs, !duplicated(langs)) #removing dups
 
 #setting up candy data==================================================
+#take out 7541 (missing maps), 7532, 7519(weird collins)
 candy_raw_data <- read_dataset("behavioral_data_raw/slim/9856_Candy_responses.csv") %>%
   rename("presentationStartTime" = "presentation_start_time")
+candy_raw_data <- candy_raw_data %>%
+  filter(screen_name != "7541") %>%
+  filter(screen_name != "7532") %>%
+  filter(screen_name != "7519")
+  
+  # subset(master_data$screenName != "7532") %>%
+  # subset(master_data$screenName != "7519")
 
 # get the column names of the data
 col_names <- colnames(candy_raw_data)
@@ -71,6 +79,10 @@ colnames(candy_raw_data) <- new_col_names
 #repeat for maps========================================================
 maps_raw_data <- read_dataset("behavioral_data_raw/slim/9857_Maps_responses.csv") %>%
   rename("presentationStartTime" = "presentation_start_time")
+maps_raw_data <- maps_raw_data %>%
+  filter(screen_name != "7541") %>%
+  filter(screen_name != "7532") %>%
+  filter(screen_name != "7519")
 
 # set the new column names
 colnames(maps_raw_data) <- new_col_names
@@ -189,13 +201,7 @@ maps_avg <- full_join(maps_avg, accuracy_maps)
 master_data <- maps_avg
 master_data <- full_join(master_data, candy_avg) %>%
   group_by(screenName, maps_first, language)
-# master_data$maps_first <- ifelse(master_data$maps_first == FALSE, "Candy First",
-#                                  master_data$maps_first)
-# master_data$maps_first <- ifelse(master_data$maps_first == TRUE, "Maps First",
-#                                  master_data$maps_first)
 
-# master_averages <- master_data %>%
-#   group_by()
 
 #adding columns for time they *started* the task
 map_time <- subset(maps_raw_data, !duplicated(screenName)) %>%
@@ -208,8 +214,6 @@ master_data <- left_join(master_data, map_time)
 master_data <- left_join(master_data, candy_time)
 
 dups <- master_data[duplicated(master_data$screenName), ]
-#what is this????????????
-#take out 7541 (missing maps), 7532, 7519(weird collins)
 
 # candy_avg_plot <- plot_ly(master_data, x = ~language, color = ~maps_first, hoverinfo = "none") %>%
 #   add_trace(y = ~mean(maps_mean_rof), type = "bar") %>%
@@ -231,9 +235,11 @@ befrNoon <- master_data %>% ungroup() %>% select(mapsBeforeNoon, candyBeforeNoon
   mutate(screenName = rep(master_data$screenName, each = 2), .before = "category")
     
 acc_by_time_df <- inner_join(acc, befrNoon, by='screenName', "category") %>%
-   subset(category.x == category.y) %>%
-   select(category.x, accuracy, BeforeNoon) %>%
-   rename("category" = "category.x")
+  subset(category.x == category.y) %>%
+  select(category.x, accuracy, BeforeNoon) %>%
+  rename("category" = "category.x") %>%
+  na.omit()
+  
    
  #  
  # acc_by_time = inner_join(acc, befrNoon, by='category') %>% 
@@ -258,3 +264,56 @@ acc_by_time_df <- inner_join(acc, befrNoon, by='screenName', "category") %>%
 
 #one column: m/c, one column: beforenoon 1/2 
 #look only at first, label before noon or after noon
+ 
+#only by first slim==============================================================
+ cfirst_x <- subset(master_data, master_data$candy_first == T)
+ cfirst <- cfirst_x %>% ungroup() %>%  
+   select(candy_mean_accuracy) %>% 
+   pivot_longer(cols=c(candy_mean_accuracy), names_to = 'cat2', values_to = 'accuracy') %>% 
+   separate(cat2, into = 'category', remove = T) %>%
+   mutate(screenName = rep(cfirst_x$screenName), .before = "category") %>%
+   mutate(BeforeNoon = cfirst_x$candyBeforeNoon)
+ 
+ 
+ mfirst_x <- subset(master_data, master_data$maps_first == T)
+ mfirst <- mfirst_x %>% ungroup() %>%  
+   select(maps_mean_accuracy) %>% 
+   pivot_longer(cols=c(maps_mean_accuracy), names_to = 'cat2', values_to = 'accuracy') %>% 
+   separate(cat2, into = 'category', remove = T) %>%
+   mutate(screenName = rep(mfirst_x$screenName), .before = "category") %>%
+   mutate(BeforeNoon = mfirst_x$mapsBeforeNoon)
+
+ 
+acc_first_only_df <- bind_rows(cfirst, mfirst) 
+acc_first_only <- lm(accuracy ~ BeforeNoon, data = acc_first_only) %>%
+  anova()
+
+#language test=================================================================
+
+acc_lang_df <- master_data %>% ungroup() %>%  select(candy_mean_accuracy, maps_mean_accuracy) %>% 
+  pivot_longer(cols=c(candy_mean_accuracy, maps_mean_accuracy), names_to = 'cat2', values_to = 'accuracy') %>% 
+  separate(cat2, into = 'category', remove = T) %>%
+  mutate(screenName = rep(master_data$screenName, each = 2), .before = "category") %>%
+  mutate(language = rep(master_data$language, each = 2))
+
+acc_lang <- lm(accuracy ~ language * category, data = acc_lang_df) %>%
+  anova()
+
+#language just mono or bi======================================================
+#this is p-hacking lolololol
+mono_bi <- master_data %>%
+  subset(language != "None of the above")
+
+acc_cleaned_lang_df <- mono_bi %>% ungroup() %>%  select(candy_mean_accuracy, maps_mean_accuracy) %>% 
+  pivot_longer(cols=c(candy_mean_accuracy, maps_mean_accuracy), names_to = 'cat2', values_to = 'accuracy') %>% 
+  separate(cat2, into = 'category', remove = T) %>%
+  mutate(screenName = rep(mono_bi$screenName, each = 2), .before = "category") %>%
+  mutate(language = rep(mono_bi$language, each = 2))
+
+acc_cleaned_lang <- lm(accuracy ~ language * category, data = acc_cleaned_lang_df) %>%
+  anova()
+ 
+
+ 
+ 
+ 
