@@ -227,7 +227,7 @@ sim.learn = sim.mod$set3_learn %>%
 
 ```{r fit models to data: h1h2Together}
 #import subject data
-sdat <-  read_csv('RLWM_data_stag2023_test.csv')
+sdat <-  read_csv('RLWM_data_stag052023.csv')
 #sdat <-  read_csv('meta_learning_group_first_half_dat.csv')
 
 
@@ -595,3 +595,81 @@ ggarrange(learn.plt, test.plt, ncol = 2, align = 'v', legend = 'left', common.le
 
 ```{r fit models to data: s3s6_split}
 ```
+
+```{r parameter function}
+param_by_subject <- 
+  inner_join(best.fit.idx, best.fits, by='subjects')
+
+get_param_vals <- function(idx) {
+ mods = idx$model
+  s = 1
+  all_paramdat = c()
+   for (m in mods) {
+   
+     if(m == 'RL') {
+       this_sim = RL.sim[idx$index[s],] %>% 
+         select(egs,alpha) %>% 
+         mutate(bll = NA, 
+                imag=NA, 
+                ans = NA, 
+                bias = NA, 
+                subjects = idx$subjects[s], 
+                model = m) %>% 
+         pivot_longer(cols = -c(subjects, model), names_to = "parameter", values_to = 'values')}
+       else {
+         
+         if(m == 'LTM'){
+           this_sim = LTM.sim[idx$index[s],] %>% 
+         select(bll, imag, ans) %>% 
+         mutate(egs = NA, 
+                alpha=NA, 
+                bias = NA,
+                subjects = idx$subjects[s],
+                model = m) %>% 
+             pivot_longer(cols = -c(subjects, model), names_to = "parameter", values_to = 'values')}
+           else {
+             if (m=='META'){
+               this_sim = META.sim[idx$index[s],] %>% 
+         select(bll, imag, ans, egs, alpha) %>% 
+                 mutate( 
+                subjects = idx$subjects[s], 
+                model = m) %>% 
+                 pivot_longer(cols = -c(subjects, model), names_to = "parameter", values_to = 'values')}
+               else {
+                 this_sim = STR.sim[idx$index[s],] %>% 
+         select(bll, imag, ans, egs, alpha) %>% 
+                    mutate( 
+                subjects = idx$subjects[s], 
+                model = m) %>% 
+                   pivot_longer(cols = -c(subjects, model), names_to = "parameter", values_to = 'values')
+             }
+             
+         }
+     }
+     all_paramdat <- rbind(all_paramdat, this_sim)
+      s = s+1
+  }
+  
+return(all_paramdat)
+  }
+
+param_idx <- get_param_vals(param_by_subject)
+
+```
+
+```{r parameter analysis}
+unique_models <- 
+  param_by_subject %>%
+  group_by(model) %>%
+  select(-subjects) %>% 
+ unique %>% tally()
+
+param_idx %>% 
+  group_by(parameter) %>% 
+  mutate(scaled = scale(values)) %>% 
+  ungroup() %>% 
+  ggplot(aes(x=scaled, y=parameter)) +
+  geom_count()
+
+```
+

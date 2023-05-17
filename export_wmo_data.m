@@ -11,7 +11,7 @@ Training_headers = {'subject','acc','RT','Code','seq','actionseq','timeseq','tri
 Path = './behavioral_data_raw/WMO_data';
  SavePath = './processed_data';
 %SavePath = '/Volumes/GoogleDrive/My Drive/CCDL Shared/Shared/Teddy/MM_WMO'
- Thesefiles =  csvread('stag_2023_subjects.csv' );%'Subjects_uclimb_and_subjectpool.csv');
+ Thesefiles =  dlmread('stag_2023_subjects.csv' );%'Subjects_uclimb_and_subjectpool.csv');
 %258852;%
  %Thesefiles = dir([Path,'/*ID*.mat']);
     Training = [];

@@ -1,6 +1,6 @@
 ;; Runs the optimizer for the Oakhill task
 
-(load "Wundt:MCL 4.2:Run Spring Oakhill Model.lisp")
+(load "MODS_ACTR; Run Spring Oakhill Model.lisp")
 
 (defvar *target* nil)
 

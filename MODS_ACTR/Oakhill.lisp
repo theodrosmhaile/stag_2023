@@ -16,7 +16,7 @@
  :rt 0.75
  :dmt t
  :mt t
- :v nil
+ :v t
  )
 
 ;;; CHUNK TYPES
