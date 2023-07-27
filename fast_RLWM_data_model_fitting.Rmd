@@ -31,7 +31,9 @@ library(ggpubr)
 library(MLmetrics)
 library(matlab)
 library(jsonlite)
+library(skimr)
 library(tidyverse)
+library(SlimStampeRData)
 
 theme_set(theme_pubclean(base_size = 12)) 
 ```
@@ -671,5 +673,75 @@ param_idx %>%
   ggplot(aes(x=scaled, y=parameter)) +
   geom_count()
 
+
 ```
+
+
+
+```{r}
+LL.fits = read_csv('~/Collins/LL_model1.csv')
+
+alpha_cor = LL.fits %>%
+  select(subject, alpha) %>%
+  rename(subjects = subject) %>% 
+  inner_join(param_idx %>% filter(parameter=='alpha') %>% drop_na(), by='subjects')
+  
+ alpha_cor %>% 
+   ggplot(aes(x=alpha,y=values)) +
+   geom_point()+
+  geom_smooth(method = 'lm')
+  
+ 
+decay_corr = LL.fits %>%
+  select(subject, decay) %>%
+  rename(subjects = subject) %>% 
+  inner_join(param_idx %>% filter(parameter=='bll') %>% drop_na(), by='subjects')
+ 
+  decay_corr %>% 
+   ggplot(aes(x=decay,y=values)) +
+   geom_point()+
+  geom_smooth(method = 'lm')
+```
+
+
+```{r slimstampen}
+ candy_dat <- read_delim('./behavioral_data_raw/slim/9856_Candy_responses.csv', delim = ';') %>% 
+ rename("userId" = "user_id", "lessonId" = "lesson_id", 
+        "factId" = "fact_id", "presentationStartTime" = "presentation_start_time", 
+        "presentationDuration" = "presentation_duration", 
+        "sessionTime" = "session_time", 
+        "reactionTime" = "reaction_time", 
+        "givenResponse" = "given_response", 
+        "sessionId" = "session_id", 
+        "numberOfChoices" = "number_of_choices", 
+        "lessonTitle" = "lesson_title") %>% 
+  mutate(factText = as.character(factId))
+      
+    
+ maps_dat <- read_delim('./behavioral_data_raw/slim/9857_Maps_responses.csv', delim = ';') %>% 
+   rename("userId" = "user_id", "lessonId" = "lesson_id", 
+        "factId" = "fact_id", "presentationStartTime" = "presentation_start_time", 
+        "presentationDuration" = "presentation_duration", 
+        "sessionTime" = "session_time", 
+        "reactionTime" = "reaction_time", 
+        "givenResponse" = "given_response", 
+        "sessionId" = "session_id", 
+        "numberOfChoices" = "number_of_choices") %>% 
+   mutate(factText = factId)
+
+  calculate_alpha_and_activation(candy_dat)
+load(clean)
+
+
+
+load('~/Blaarkop/cleandata_avg.RData')
+
+
+
+RLWM_slim <- 
+  i
+  
+
+```
+
 

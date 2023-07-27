@@ -62,11 +62,11 @@
 
 (Add-DM
  ; useful symbols
- ;(last isa symbol) ----- TMH mod
+ ;(last isa symbol) ----- TMH modified
  ;(not isa symbol) ----- TMH mod
  ;(done isa symbol) ----- TMH mod
  ; the 10 digits plus blank
- (n0 isa character external "0")
+ (n0 isa character external "0") ;; looks like numbers can't be used as chunk names added 'n' to fix
  (n1 isa character external "1")
  (n2 isa character external "2")
  (n3 isa character external "3")
@@ -146,19 +146,19 @@
 ;; isa character 
 ;; external =string      
 
-    =visual>
+  ;;  =visual>
       ;;isa character
-      external =string
+    ;;  external =string
 ==>
   
 
-   !output! ("Saying ~A" =string)
+   ;;!output! ("Saying ~A" =char)
    =goal>
       status done
       )
 
 ; the reading + articulating latency is set at 200 milliseconds
-;; (parameters read-aloud :dat .200)
+;; (parameters read-aloud :dat .200) ;; TMH replaced :effort with :dat
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;                                                                      ;;

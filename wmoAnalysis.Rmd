@@ -14,6 +14,7 @@ There are 8 blocks of set size 3 trials and 6 blocks of set size 6 trials per pa
 rm(list = ls())
 library(matlab)
 library(tidyverse)
+library(magrittr)
 
 ```
 Import data and set variables
@@ -21,7 +22,7 @@ Import data and set variables
 
 #Import data
 wmodata     <- read.csv('./processed_data/wmo_training_2023.txt') 
-wmotestdata <- read.csv('./processed_data/wmo_test_2023.txt') 
+wmotestdata <- read.csv('./processed_data/wmo_test_06_2023.txt') 
 
 
 Training.blocks <- c(3,6,3,3,6,3,6,6,3,3,6,3,6,3) #from data
@@ -42,8 +43,8 @@ ns6.n <- 6
 Subjects <- as.matrix(read.csv('stag_2023_subjects.csv',header = FALSE))
 
 # excluded subjects 
-# ---- 7532, 7519 don't know why yet
- Subjects[c(33, 20,2)]=0
+# ---- 7532,  don't know why yet
+ Subjects[Subjects=='7532']=0
 ```
  
 This block performs the learning/accuracy curve: acc by item`r ns6` iteration  
@@ -117,7 +118,7 @@ tempframe.6 <- data.frame("accuracy" =rowMeans(temp.cat.6),
 temp.lm.3 <- lm(accuracy ~ poly(iterations,4), data = tempframe.3)
 temp.lm.6 <- lm(accuracy ~ poly(iterations,4), data = tempframe.6)
  
-  if (0) {
+  if (1) {
    
  
     plot(rowMeans(temp.cat.3),ylim = c(0,1),col = '#e41a1c',
@@ -186,14 +187,14 @@ rlwm_data <-  cbind(mean.acc.3, mean.acc.6) %>%
   
 ns3_test <- rep(ns3.test.mean,12) %>% 
     as.matrix() %>% 
-    reshape(., 121,12) %>%
+    reshape(., numel(ns3.test.mean),12) %>%
     as_data_frame()
   
 colnames(ns3_test) <- paste0('test3_', 1:12)
 
   ns6_test <-  rep(ns6.test.mean,12) %>% 
     as.matrix() %>% 
-    reshape(., 121,12) %>%
+    reshape(., numel(ns6.test.mean),12) %>%
     as_data_frame()
 colnames(ns6_test) <- paste0('test6_', 1:12)
 
@@ -202,10 +203,65 @@ rlwm_data %<>%
    mutate(subjects = Subjects %>% c()) %>% 
   drop_na()
 
-write_csv(rlwm_data, 'RLWM_data_stag2023_test.csv')
+write_csv(rlwm_data, 'RLWM_data_stag052023.csv')
 
 }
 
+RLWM_test_new <- wmotestdata %>%  
+  rename(response = Code, 
+         imageID = stim, 
+         blockID = block) %>% 
+  mutate(stimetSize =  
+           case_when(blockID == 2 ~ 6, 
+                     blockID == 3 ~ 3, 
+                     blockID == 4 ~ 3, 
+                     blockID == 5 ~ 6, 
+                     blockID == 6 ~ 3, 
+                     blockID == 7 ~ 6, 
+                     blockID == 8 ~ 6, 
+                     blockID == 9 ~ 3, 
+                     blockID == 10 ~ 3, 
+                     blockID == 11 ~ 6, 
+                     blockID == 12 ~ 3, 
+                     blockID == 13 ~ 6))
 
+
+
+write_csv(RLWM_test_new, 'RLWM_TEST_data_stag_06_2023.csv')
+```
+
+```{r}
+dat = read_csv('one_subject_fit.csv')
+
+dat %>% 
+  drop_na() %>% 
+  inner_join(tibble(blockSize = c(3,6,3,3,6,3,6,6,3,3,6,3,6,3), 
+                    block=1:14), by='block') %>% 
+  filter(blockSize==3, image==2, block==6) %>% 
+
+arrange(block, image) %>% 
+  group_by(block, image) %>% 
+  mutate(index_bi = row_number()) %>%  
+ # ungroup() %>% skimr::skim()
+  group_by(index_bi, response) %>% 
+  
+  
+  summarise(mean=mean(Q),
+         n=n(),
+            se=std(Q)/sqrt(n))  %>% 
+   ggplot(aes(x=index_bi, y=mean, 
+              ymax=mean+se, ymin=mean-se, 
+              group=response, color=as.factor(response))) +
+  geom_point(size=5) +
+  geom_line(size=2) +
+  theme_pubclean(base_size = 28, base_family = 'Times', ) +
+  xlab("Trials")+
+  ylab('Utility (U)') 
+  
+ 
+ 
+  
+  
 
 ```
+

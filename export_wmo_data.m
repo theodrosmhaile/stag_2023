@@ -5,7 +5,7 @@ clear all
 %       39 (8 blocks) or 78 (6 blocks) presentations
 
 Training_headers = {'subject','acc','RT','Code','seq','actionseq','timeseq','trial'};
-    Test_headers = {'subject','acc','RT','Code','stim'}; 
+    Test_headers = {'subject','acc','RT','Code','stim', 'block'}; 
 %   Import data for each participant
 % Path = '/Volumes/GoogleDrive/My Drive/CCDL Shared/Shared/Teddy/MM_WMO'
 Path = './behavioral_data_raw/WMO_data';
@@ -31,8 +31,8 @@ for n =1: length(Thesefiles)
     end 
     
     thisParticipant = ones(length(cell2mat(struct2cell(dataTest))), 1)* Thesefiles(n);%This participant
-    Test = [Test;thisParticipant cell2mat(struct2cell(dataTest))' matricetest.stimBlockSeq];
-   
+    Test = [Test;thisParticipant cell2mat(struct2cell(dataTest))' matricetest.stimNumSeq matricetest.stimBlockSeq];
+  
        %Save as csv
        
 %         writetable(array2table(Training,'VariableNames',Training_headers), ...
@@ -51,9 +51,9 @@ end
 %Export
 cd(SavePath)
  writetable(array2table(Training,'VariableNames',Training_headers), ...
-            'wmo_training_2023') 
+            'wmo_training_06_2023') 
        writetable(array2table(Test,'VariableNames',Test_headers), ...
-           'wmo_test_2023')        
+           'wmo_test_06_2023')        
 
        %writetable(array2table(missing_dat','VariableNames',"MissingSubjects"), ...
         %   'wmo_MissingWinter19Pooldata')

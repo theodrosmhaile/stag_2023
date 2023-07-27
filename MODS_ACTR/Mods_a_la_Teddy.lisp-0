@@ -1,0 +1,60 @@
+;;------------------------------------
+;; MODS a la Teddy
+;;------------------------------------
+;;
+;; This is a re-implementation of the Daily et al. MODS ACT-R model. 
+
+
+
+(clear-all)
+
+(define-model MODS_ACTR
+
+
+(sgp
+ :esc t 
+ :ga 1.00
+ :bll 0.5
+ :ol t
+ :ans 0.14 
+ :mp 3.3
+ :rt 0.75
+ :dat .180
+ :v t
+ )
+
+;;--------------------------------------------------------
+;;----------------Chunk types-----------------------------
+(chunk-type goal
+            articulate
+            read) ;; fproc= feedback processed
+
+(chunk-type stimulus
+            item)
+
+
+
+(p read-aloud 
+   
+    =goal>
+   ; isa articulate
+    read no
+
+    =visual>
+    item =ThisItem
+
+    ?vocal>
+    preparation free
+    processor free
+    execution free
+    state free
+
+    ==>
+   +vocal>
+   cmd subvocalize
+   string =ThisItem
+
+    *goal>
+    read yes
+    )
+)
