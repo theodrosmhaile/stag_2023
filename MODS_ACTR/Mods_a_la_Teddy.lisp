@@ -17,13 +17,18 @@
  :bll 0.5
  :ol t
  :ans 0.14 
- :mp 3.3
- :rt 0.75
+ :mp nil
  :dat .180
  :v t
  :declarative-finst-span 0.5
  ;:act t 
- :rt -10 
+ :rt -0.81 ;-10 ;-10 
+ ;; -------------- Memory retrieval takes too long, sometimes over a second - this prevents
+ ;; retrievals from occurring before the next stimulus is presented. This timeline also seems
+ ;; too unrealistic for a wm task so shorter is better? used the two parameters below to shorten recall time. 
+ ;:le 10
+ ;:lf 2.5
+ ;;-0.81
  )
 
 ;;---------------------------------------------
@@ -32,20 +37,22 @@
             articulate
             read
             respond
-            rehearse) ;
+            rehearsing
+            ) 
 
 (chunk-type stimulus
             item 
             type
-            position)
+            position
+            kind)
 
 (chunk-type wmobj 
             kind 
-            digit
+            item
             position)
 
 
-(add-dm (womobj1 isa wmobj kind wm digit 4 position 1))
+;(add-dm (womobj1 isa wmobj kind wm digit 4 position 1))
 
 ;;-------------------------------------------
 ;; This production just reads out all characters except for blank spaces, changes
@@ -74,7 +81,7 @@
 
     *goal>
     read yes
-    rehearse no
+    
 
     =visual>
     )
@@ -90,7 +97,7 @@
     =goal>
     read yes
     respond no
-    rehearse no
+   
 
     ?visual>
     - buffer empty
@@ -101,59 +108,106 @@
     ==>
 
  *goal>
-   rehearse yes
+   read no
  
     )
 
+;;-------------------------------------------
+;;  encode working memory: this production creates new imaginal chunks that are of
+;; type WM. 
 
 (p encode-wm 
   =goal>
-     ...
+     read yes
   =visual>
      type digit
-     letter =D
+     item =D
      position =P
- ...
+ 
 ==>
-  !bind! =NEXT (incf =P)
-  *goal>
-     ndigits =P
-     ...
-  +imaginal>
-     isa wmobj
-     kind wm
-     digit =D
-     position =P
-     next =NEXT
-)
+  !bind! =NEXT (1+ =P)
+  
+    +imaginal>
+      isa wmobj
+      kind wm
+      item =D
+      position =P
+      next =NEXT
 
-(p free-wm
-...
-  =imaginal>
-    kind wm
-    digit =X
-==>
-  ...
-  -imaginal
+    *goal>
+    read yes
+    ndigits =P
+    rehearsing 1
+    clear_wm yes
+ !output! (ndigits =P)
 )
 
 ;;-------------------------------------------
-;;------- Block of rehearsal productions
+;; imaginal chunks get written to declarative memory when imaginal buffer is cleared by 
+;; the free-wm production. 
+
+(p free-wm
+
+    =goal>
+      clear_wm yes 
+    
+    =imaginal>
+      kind wm 
+      item =x 
+    
+    ==>
+    
+    -imaginal>
+    
+    *goal>
+    
+    clear_wm no)
+
+
+
+;;-------------------------------------------
+;;------- start rehearse - this production runs regardless of number of digits 
+;; so that all items that need rehearsing are retrieved. E.g., item 1 of 1, and 2 of 2. 
+;; clear_wm slot functions here to ensure that continue-rehearse production always runs 
+;; after start-rehearse. Also, the flag 'no' helps make sure this does not run before 
+;; imaginal is not cleared. 
+
+
 (p start-rehearse
-  ...
+ 
   =goal>
-     ndgits =N
-     rehearsing =R
-   - rehearsing =N
+   read yes
+   clear_wm no
+
+   ndigits =N
+   rehearsing =R
+  ; - rehearsing =N
+
 ==>
+
   +retrieval>
      isa wmobj
      kind wm
-     position =R)
+     position =R
+
+!output! (retrieved position =R for ndigits =N)
+    =goal>
+    clear_wm nil
+     )
+
+;;-------------------------------------------
+;;------- continue-rehearse - this production runs only if the total number of presented
+;; digits have not been reached, and should run after wm has been cleared. It retrieves the 
+;; the next position to rehearse and passes it along to start-rehearsal. Clear_wm also 
+;; triggers/allows start-rehearsal. 
 
 (p continue-rehearse
    =goal>
-   ...
+    read yes
+    clear_wm nil
+    ndigits =nd
+  - rehearsing =nd
+
    =retrieval>
       kind wm
       position =current
@@ -161,80 +215,36 @@
 ==>
    =goal>
       rehearsing =next
+      clear_wm no
+
+!output! (set next retrieval to =next for ndigits =nd)
 )
-
-(p reset-rehearse
-   =goal>
-      ndigits =N
-      rehearsing =N
-   ==>
-      rehearsing 1
-)
-
-
-
-#|(p rehearse
-  =goal>
-     rehearse yes
-
-  ?retrieval>
-     state free
-  ?visual>
-     buffer empty
-     state free
-  
-  ?manual>
-     preparation free
-     execution free
-==>
-  +retrieval>
-    type  digit
-:recently-retrieved nil 
-
-!output! ( !!!!!!!!!!!RETRIEVAL!!!!!!!!!!!)
-    
-   *goal>
-    read no
-    rehearse no
- )|#
-
-
 
 ;;-------------------------------------------
-;;If a digit is encountered, its identity (what number), and serial position,  
-;;is passed on to the imaginal buffer to create a memory trace. 
+;;------- reset-rehearse - rehearsal should always start at item one. This competes with
+;; continue-rehearse above, and runs when the the last position of all items has been reached. 
+;; it has the additional constraint that it should run when a stimulus is presented.  
 
-#|(p create-memory
+(p reset-rehearse
    
-    =goal>
+   =goal>
     read yes
-    respond no
-   
-   =visual>
-    type digit
-    item =ThisItem
-    position =ThisPosition
+    clear_wm nil
+    ndigits =N
+    rehearsing =N
 
-   ?imaginal>
-    state free
-
-    ==>
-
-    +imaginal>
-    isa stimulus
-    item =ThisItem
-    position =ThisPosition
-    type digit
-
-    +retrieval>
-    isa stimulus
-    item =ThisItem
-    position =ThisPosition
-    type digit
+  ?visual>
+  ;state free
+  buffer full
+   ==>
 
     *goal>
+    rehearsing 1
     read no
-    ) |#
+    ndigits nil
+    
+)
+
 
 ;;-------------------------------------------
 ;; This production fires only when a blank space is displayed, signaling time for a response. 
@@ -290,6 +300,7 @@
    +retrieval>
    isa stimulus
    position =ThisPosition
+   kind wm
    - item nil
 
    =visual>
@@ -310,6 +321,9 @@
     =goal>
      read yes
      respond yes
+
+    =visual>
+   type space
 
     ?manual>
     preparation free
@@ -350,8 +364,9 @@
 
 
    =retrieval>
-   item =response_key
-   position 1
+     kind wm
+     item =response_key
+     position 1
 
    ?manual>
     preparation free
@@ -383,6 +398,7 @@
 
 
    =retrieval>
+   kind wm
    item =response_key
    position 2
 
@@ -416,9 +432,79 @@
 
 
    =retrieval>
+   kind wm
    item =response_key
    position 3
 
+   ?manual>
+    preparation free
+    processor free
+    execution free
+
+   ==>
+
+   +manual>
+    cmd press-key
+    key =response_key
+
+    *goal>
+    read no
+    respond no
+
+    )
+
+
+
+
+(p make-response-s4
+   
+   =goal>
+   read yes
+   respond yes
+
+   =visual>
+   type space
+   position 4
+
+
+   =retrieval>
+   kind wm
+   item =response_key
+   position 4
+
+   ?manual>
+    preparation free
+    processor free
+    execution free
+
+   ==>
+
+   +manual>
+    cmd press-key
+    key =response_key
+
+    *goal>
+    read no
+    respond no
+
+    )
+
+
+(p make-response-s5
+   
+   =goal>
+   read yes
+   respond yes
+
+   =visual>
+   type space
+   position 5
+
+
+   =retrieval>
+   kind wm
+   item =response_key
+   position 5
 
    ?manual>
     preparation free
@@ -439,6 +525,7 @@
 
 
 )
+
 
 
 

@@ -13,19 +13,20 @@ editor_options:
   chunk_output_type: console
 ---
 
-```{css, echo=FALSE}
-p {
-  font-size: 18px;
-}
-```
+<!-- ```{css, echo=FALSE} -->
+<!-- p { -->
+<!--   font-size: 18px; -->
+<!-- } -->
+<!-- ``` -->
 
 ```{r setup}
 knitr::opts_chunk$set(
-  comment = "#>", echo = FALSE, warning = FALSE, 
-  message = FALSE, dpi = 300
- 
+	echo = FALSE,
+	message = FALSE,
+	warning = FALSE,
+	comment = "#>",
+	dpi = 300
 )
-
 library(magrittr)
 library(ggpubr)
 library(MLmetrics)
@@ -95,17 +96,19 @@ get_data_ml = function(data){
                    ,values_to = 'accuracy', names_to = 'iteration'), 
     
     
-    c('test3', 'test6') %>%
+    ####### implemented fix to out of sync model_id and iteration numbers TMH 07/31/2023
+    
+    c('set3_test', 'set6_test') %>% #, 'bias' 'alpha','egs', 'bll', 'imag','ans'
       map (~
              {
                temp = data %>% 
-                 .[[.x]]
+                 .[[.x]] 
                
                data.frame(
-                subjects= rep(data$index, 13),
+                  model_index= c(1:nrow(data)),
                  condition=.x, 
-                 iteration=paste0('X', rep(c(1:13), nrow(data))), 
-                 accuracy=rep(temp, 13)
+                 iteration= paste0('X',matrix(1:12,12, nrow(data)) %>% t() %>% c()), 
+                 accuracy=rep(temp, 12)
                )
                
              }
@@ -239,8 +242,10 @@ sdat <-  read_csv('RLWM_data_stag052023.csv')
 RL.sim <- fromJSON('./simulated_data/RL_model/RL_sim_data_07_12_2022.JSON')$data %>% #RL_sim_data_07_12_2022.JSON
   dplyr::mutate(bias = 0)
 
-LTM.sim <- fromJSON('./simulated_data/LTM_model/LTM_sim_data_02202021.JSON')$data %>% #LTM_sim_data_02202021.JSON
+LTM.sim <- fromJSON('./simulated_data/LTM_model/LTM_sim_data_BLL_short_break_12_trace.JSON')$data %>% #LTM_sim_data_02202021.JSON 
   dplyr::mutate(bias = 0 )
+
+
 
 STR.sim <- fromJSON('./simulated_data/strategy_model/STR_sim_data_032021.JSON')$data %>% 
   dplyr::mutate(bias = str_remove_all(strtg, "[:alpha:]") %>% as.numeric()/100, .keep=c('unused'))
@@ -594,6 +599,35 @@ unite(col='cond.model', c( 'condition','type'),remove = F) %>% #'condition'
 ggarrange(learn.plt, test.plt, ncol = 2, align = 'v', legend = 'left', common.legend = T)
 
 ```
+
+
+
+
+
+```{r individual plots}
+ p.model.behav.dat %>% 
+  filter(phase=='test') %>%
+unite(col='cond.model', c( 'condition','type'),remove = F) %>% #'condition'
+ filter(model=='LTM') %>% 
+   ggplot(aes(as.numeric(iteration),accuracy, group=cond.model,color=cond.model)) +
+  geom_point(size=1.5) +
+  geom_line(size=1) +
+  scale_color_brewer(palette = "Paired") +
+  facet_wrap(vars(subjects))
+```
+
+```{r learn to test change}
+ p.model.behav.dat %>% 
+  filter(iteration=='12') %>%
+unite(col='cond.model', c( 'condition','type'),remove = F) %>% #'condition'
+ filter(model=='LTM') %>% 
+   ggplot(aes(phase,accuracy, group=cond.model,color=cond.model)) +
+  geom_point(size=1.5) +
+  geom_line(size=1) +
+  scale_color_brewer(palette = "Paired") +
+  facet_wrap(vars(subjects))
+```
+
 
 ```{r fit models to data: s3s6_split}
 ```

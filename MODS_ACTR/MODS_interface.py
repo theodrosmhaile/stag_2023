@@ -39,7 +39,8 @@ def present_stim():
         chunks = actr.define_chunks(['isa', 'stimulus',
          'item', stims[i], 
          'type', of_Type[i], 
-         'position', in_Position[i]])
+         'position', in_Position[i], 
+         'kind', 'visual'])
 
         actr.set_buffer_chunk('visual', chunks[0])
 
@@ -49,11 +50,11 @@ def present_stim():
         			
 
         else:
-        	actr.schedule_event_relative(1, 'present_stim')
+        	actr.schedule_event_relative(0.9, 'present_stim')
         	
 
     i = i + 1
-    print('from present stim: i= ', i)
+  #  print('from present stim: i= ', i)
     
 
 def get_response(model, key ):
@@ -68,7 +69,7 @@ def get_response(model, key ):
     return current_response
 #increase index for next stimulus
     i = i + 1
-    print('from get resp: i= ', i)
+   # print('from get resp: i= ', i)
     
 
 # This function builds ACT-R representations of the python functions
@@ -95,7 +96,7 @@ def model_loop():
 
     #waits for a key press?
 
-    actr.run(500)
+    actr.run(100)
 
 actr.add_command('present_stim', present_stim, 'presents stimulus')
 #actr.add_command('present_feedback', present_feedback, 'presents feedback')
@@ -104,12 +105,20 @@ actr.monitor_command("output-key", 'get_response')
 
 
 ### Stimuli  -  short test stimuli for a 3-span string, with 2 intervening letters
-nTrials = 12
+nTrials = 30
 
-stims =       ["'4'", "'C'", "'A'", "'1'","'H'", "'T'", "'7'", "'space1'", 'space2', 'space3']
-of_Type =     ['digit', 'letter', 'letter', 'digit','letter', 'letter', 'digit', 'space', 'space','space']
-in_Position = ['1', 'nil', 'nil','2', 'nil', 'nil', '3', 1, 2, 3]
+stims =       ["'4'", "'C'", "'A'", "'1'","'H'", "'T'", "'7'","'space1'", 'space2', 'space3']
+of_Type =     ['digit', 'letter', 'letter', 'digit','letter', 'letter', 'digit',  'space', 'space','space' ]
+in_Position = ['1', 'nil', 'nil','2', 'nil', 'nil', '3' ,1, 2, 3]
+
+### span 5 test
+#stims =       ["'4'", "'C'", "'A'", "'1'","'H'", "'T'", "'7'","'V'", "'M'","'L'","'2'","'W'","'T'","'6'", "'space1'", 'space2', 'space3', 'space4', 'space5']
+#of_Type =     ['digit', 'letter', 'letter', 'digit','letter', 'letter', 'digit','letter', 'letter','letter','digit', 'letter', 'letter', 'digit',  'space', 'space','space', 'space', 'space']
+#in_Position = ['1', 'nil', 'nil','2', 'nil', 'nil', '3', 'nil', 'nil','nil', '4','nil', 'nil','5',1, 2, 3, 4, 5]
+
+
+
 
 i = 0
 
-current_response  = np.repeat('na', nTrials).tolist() 
+current_response  = np.repeat('na', 5).tolist() 
