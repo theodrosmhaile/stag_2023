@@ -1,5 +1,5 @@
 ;;------------------------------------
-;; MODS a la Teddy
+;; MODS a la Andy
 ;;------------------------------------
 ;;
 ;; This is a re-implementation of the Daily et al. MODS ACT-R model. 
@@ -7,6 +7,8 @@
 
 
 (clear-all)
+
+;;(setf *numbers* '((1 . one) (2 . two) (3 . three) (4 . four) (5 . five) (6 . six)))
 
 (define-model MODS_ACTR
 
@@ -23,8 +25,8 @@
  :declarative-finst-span 0.5
  :act t 
  :rt -0.81 ;-0.81 ;-10 ;-10 
- ;:mas 4
- ;:visual-activation 2
+ ;:mas 2
+ :visual-activation 4
  )
 
 ;;---------------------------------------------
@@ -40,6 +42,7 @@
             item 
             type
             position
+            pos-word
             kind)
 
 (chunk-type wmobj 
@@ -119,15 +122,16 @@
      type digit
      item =D
      position =P
- 
+     pos-word =PW
 ==>
   !bind! =NEXT (1+ =P)
-  
+  ;!bind! =POS-WORD (cdr (assoc =P *numbers*))
     +imaginal>
       isa wmobj
       kind wm
       item =D
       position =P
+      pos-word =PW
       next =NEXT
 
     *goal>
@@ -193,8 +197,8 @@
 (p check-memory
    =visual>
      type space
-     position =ThisPosition
-     
+    ; position =ThisPosition
+     pos-word =ThisPosition
   
    ?visual>
      state free
@@ -216,7 +220,7 @@
 
    +retrieval>
    isa stimulus
-   position =ThisPosition
+   pos-word =ThisPosition
    kind wm
    - item nil
 
@@ -278,13 +282,14 @@
    =visual>
    type space
    position 1
-
+   pos-word one 
 
    =retrieval>
      kind wm
      item =response_key
      position 1
-
+     pos-word one 
+   
    ?manual>
     preparation free
     processor free
@@ -312,13 +317,13 @@
    =visual>
    type space
    position 2
-
+   pos-word two 
 
    =retrieval>
    kind wm
    item =response_key
    position 2
-
+   pos-word two
   
    ?manual>
     preparation free
@@ -346,13 +351,14 @@
    =visual>
    type space
    position 3
-
+   pos-word three
 
    =retrieval>
    kind wm
    item =response_key
    position 3
-
+   pos-word three
+   
    ?manual>
     preparation free
     processor free
@@ -379,14 +385,15 @@
    =visual>
    type space
    position 4
-
+   pos-word four 
 
    =retrieval>
    kind wm
    item =response_key
    position 4
-
-   ?manual>
+   pos-word four
+   
+    ?manual>
     preparation free
     processor free
     execution free
@@ -412,13 +419,14 @@
    =visual>
    type space
    position 5
-
+   pos-word five
 
    =retrieval>
    kind wm
    item =response_key
    position 5
-
+   pos-word five
+   
    ?manual>
     preparation free
     processor free
@@ -445,12 +453,14 @@
    =visual>
    type space
    position 6
+   pos-word six
 
 
    =retrieval>
    kind wm
    item =response_key
    position 6
+   pos-word six
 
    ?manual>
     preparation free

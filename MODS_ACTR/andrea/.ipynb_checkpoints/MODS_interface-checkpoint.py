@@ -14,7 +14,7 @@ import pandas as pd
 import itertools
 
 
-debug = True
+debug = False
 show_output = False
 
 #Load model
@@ -41,13 +41,16 @@ def present_stim():
          'item', stims[i], 
          'type', of_Type[i], 
          'position', in_Position[i], 
+          'pos-word', Pos_word[i],                           
          'kind', 'visual'])
 
         actr.set_buffer_chunk('visual', chunks[0])
         
         if (stims[i].__contains__('space')):
-        	print('encountered space')
-        	#actr.schedule_event_relative(1, 'get_response')
+            
+            if show_output:
+                print('encountered space')
+                actr.schedule_event_relative(0, 'present_stim')
         			
 
         else:
@@ -64,11 +67,13 @@ def get_response(model, key ):
     global strategy_used
     global cr
 
-    print("Get Response ran")
+    if show_output:
+        print("Get Response ran")
     actr.schedule_event_relative(0, 'present_stim')
     print(cr)
     current_response[cr] = key
-    print(current_response)
+    if show_output:
+        print(current_response)
     cr = cr + 1
 
     return current_response
@@ -102,7 +107,7 @@ def model_loop():
 
     #waits for a key press?
 
-    actr.run(30)
+    actr.run(100)
 
 actr.add_command('present_stim', present_stim, 'presents stimulus')
 #actr.add_command('present_feedback', present_feedback, 'presents feedback')
@@ -119,11 +124,11 @@ if debug:
     stims =       ["'4'", "'C'", "'A'", "'1'","'H'", "'T'", "'7'",'space1', 'space2', 'space3']
     of_Type =     ['digit', 'letter', 'letter', 'digit','letter', 'letter', 'digit',  'space', 'space','space' ]
     in_Position = ['1', 'nil', 'nil','2', 'nil', 'nil', '3' ,1, 2, 3]
-    
+    Pos_word =    ['LOL', 'nil', 'nil', 'two', 'nil', 'nil', 'three', 'one', 'two', 'three']
     current_response  = np.repeat(-1, nTrials).tolist()     
 
 
-def simulation(nSims, expt):
+def simulation(nSims, expt, mas):
 
     global nTrials
     global resps 
@@ -135,6 +140,7 @@ def simulation(nSims, expt):
     global stims
     global of_Type
     global in_Position
+    global Pos_word
     
     span = expt['span_size']
     
@@ -146,12 +152,15 @@ def simulation(nSims, expt):
     position_temp = ('1','2', '3', '4', '5', '6')
     letters='A', 'B', 'C'
     space_temp = ('space1', 'space2','space3','space4','space5','space6') 
+    pos_word_temp = ('one', 'two', 'three', 'four', 'five', 'six')
+    
     for s in range(0, nSims):
 #----- set up experiment - initialize variables, these change for a set of sims        
         this_type     = ()
         this_stim     = ()
         this_position = ()
-    
+        this_pos_word = ()
+        
         win = None
         i = 0
 
@@ -162,18 +171,19 @@ def simulation(nSims, expt):
             this_stim =  this_stim + tuple(expt['corr_responses'][ss])
             this_type = np.append(this_type, type_temp[ss])
             this_position = np.append(this_position,  position_temp[ss])
-            
+            this_pos_word = np.append(this_pos_word,  pos_word_temp[ss])
             if ss < span-1:
                 
                 this_len = rand.sample([2,3], 1)[0]
                 this_stim     = this_stim + letters[0:this_len]
                 this_type     = np.append(this_type, np.repeat('letter', this_len))
                 this_position = np.append(this_position, np.repeat('nil', this_len))
+                this_pos_word = np.append(this_pos_word,  np.repeat('nil', this_len))
                 
         this_stim =     this_stim + space_temp[0:span]
         this_type =     np.append(this_type, tuple(np.repeat('space', span)))
         this_position = np.append(this_position, position_temp[0:span])
-        
+        this_pos_word = np.append(this_pos_word,  pos_word_temp[0:span])
 #----- set up experiment - setup stimuli and properties for presntation to model
 
         nTrials = len(this_stim)
@@ -183,12 +193,12 @@ def simulation(nSims, expt):
         stims =          np.array(this_stim).tolist()
         of_Type =        np.array(this_type).tolist()
         in_Position =    np.array(this_position).tolist()
-
+        Pos_word =        np.array(this_pos_word).tolist()
         current_response  = np.repeat(-1, span).tolist()  
         
 #----- run experiment 
 
-       
+        actr.set_parameter_value(":mas", mas)
     
         model_loop()
         actr.reset()
