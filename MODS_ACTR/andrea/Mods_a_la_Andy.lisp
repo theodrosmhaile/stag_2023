@@ -4,7 +4,15 @@
 ;;
 ;; This is a re-implementation of the Daily et al. MODS ACT-R model.
 
-
+;;------ CHANGE-LOG
+;;------- 08/27/2023 -TMH
+;;  - Added a simple function to transform numbers to their word form. 
+;;  - Replaced the 6 response productions with a single production that incrementally
+;;    responds to each position. 
+;;  - Updated check-memory production to hold information about which position to respond to next.
+;;        -  check memory also required a new way of binding the word form of the number since this
+;;            information is no longer provided through visual buffer, but is needed for Sji computation. 
+;;  - changes did not occur here but, rehearsals do not run during the response period. 
 
 (clear-all)
 
