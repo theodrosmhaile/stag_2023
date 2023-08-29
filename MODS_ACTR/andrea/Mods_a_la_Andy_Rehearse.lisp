@@ -8,13 +8,15 @@
 
 (p rehearse
   =goal>
- - respond yes
+  respond nil ;;tmh 08/24 was - respond yes
    ndigits =N
    rehearsing =R
 
   ?retrieval>
   - state busy
     buffer empty
+
+  
 ==>
 
   +retrieval>
@@ -28,7 +30,7 @@
 
 (p continue-rehearse
   =goal>
-  - respond yes
+ respond nil ;;tmh 08/24 was - respond yes
     ndigits =N
   < rehearsing =N
 
@@ -38,6 +40,8 @@
    =retrieval>
      kind wm
      next =NEXT
+
+
 ==>
    =goal>
      rehearsing =NEXT
@@ -47,13 +51,16 @@
 
 (p recover-after-error
   =goal>
-  - respond yes
+ respond nil ;;tmh 08/24 was - respond yes
     ndigits =N
   < rehearsing =N
 
   ?retrieval>
     state error
     buffer empty
+   
+    
+   
 ==>
    !bind! =NEXT (incf =N)
    =goal>
@@ -64,7 +71,7 @@
 
 (p reset-rehearse 
   =goal>
-  - respond yes
+  respond nil ;;tmh 08/24 was - respond yes
     read yes
     ndigits =N
     rehearsing =N
@@ -73,6 +80,8 @@
     kind wm
     position =current
     next =next
+   
+
 ==>
   -retrieval>
   *goal>

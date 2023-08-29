@@ -2,7 +2,7 @@
 ;; MODS a la Andy
 ;;------------------------------------
 ;;
-;; This is a re-implementation of the Daily et al. MODS ACT-R model. 
+;; This is a re-implementation of the Daily et al. MODS ACT-R model.
 
 
 
@@ -10,23 +10,35 @@
 
 ;;(setf *numbers* '((1 . one) (2 . two) (3 . three) (4 . four) (5 . five) (6 . six)))
 
+(defun return-word (x)
+  (setq y
+        (case x
+          (1 'one)
+          (2 'two)
+          (3 'three)
+          (4 'four)
+          (5 'five)
+          (6 'six)
+          (otherwise nil))))
+
+
 (define-model MODS_ACTR
 
 
 (sgp
- :esc t 
+ :esc t
  :ga 1.00
  :bll 0.5
  :ol t
- :ans 0.14 
+ :ans 0.14
  :mp nil
  :dat .180
  :v nil
  :declarative-finst-span 0.5
- :act t 
- :rt -0.81 ;-0.81 ;-10 ;-10 
+ ;:act t
+ :rt -0.81 ;-0.81 ;-10 ;-10
  ;:mas 2
- :visual-activation 4
+ :visual-activation 1
  )
 
 ;;---------------------------------------------
@@ -36,32 +48,33 @@
             read
             respond
             rehearsing
-            ) 
+            )
 
 (chunk-type stimulus
-            item 
+            item
             type
             position
             pos-word
             kind)
 
-(chunk-type wmobj 
-            kind 
+(chunk-type wmobj
+            kind
             item
-            position)
+            position
+            pos-word)
 
 
 ;(add-dm (womobj1 isa wmobj kind wm digit 4 position 1))
 
 ;;-------------------------------------------
 ;; This production just reads out all characters except for blank spaces, changes
-;; goal for 'read' activity to yes and preserves items in visual buffer. 
+;; goal for 'read' activity to yes and preserves items in visual buffer.
 
-(p read-aloud 
+(p read-aloud
     =goal>
     ;isa articulate
     read no
-    respond no
+    respond nil ;;tmh 08/24  was respond no
 
     =visual>
     item =ThisItem
@@ -80,7 +93,7 @@
 
     *goal>
     read yes
-    
+
 
     =visual>
     )
@@ -88,34 +101,34 @@
 
 
 ;;-------------------------------------------
-;; If a character has been read aloud, but a response is not required, this 
-;; production resets the goal to read the next character. 
+;; If a character has been read aloud, but a response is not required, this
+;; production resets the goal to read the next character.
 
 
 (p read-next
     =goal>
     read yes
-    respond no
-   
+    respond nil ;;tmh 08/24  was respond no
+
 
     ?visual>
     - buffer empty
 
     =visual>
     type letter
-    
+
     ==>
 
  *goal>
    read no
- 
+
     )
 
 ;;-------------------------------------------
 ;;  encode working memory: this production creates new imaginal chunks that are of
-;; type WM. 
+;; type WM.
 
-(p encode-wm 
+(p encode-wm
   =goal>
      read yes
   =visual>
@@ -141,25 +154,25 @@
 )
 
 ;;-------------------------------------------
-;; imaginal chunks get written to declarative memory when imaginal buffer is cleared by 
-;; the free-wm production. 
+;; imaginal chunks get written to declarative memory when imaginal buffer is cleared by
+;; the free-wm production.
 
 (p free-wm
 
     =goal>
-      clear_wm yes 
-    
+      clear_wm yes
+
     =imaginal>
-      kind wm 
-      item =X 
+      kind wm
+      item =X
       position =N
-    
+
     ==>
-    
+
     -imaginal>
-    
+
     *goal>
-    
+
     clear_wm no
     ndigits =N
     rehearsing 1
@@ -169,37 +182,49 @@
 
 
 ;;-------------------------------------------
-;; This production fires only when a blank space is displayed, signaling time for a response. 
-;; It sets the goal to respond and also notes that the space has been read. It also preserves 
-;; the contents of the visual buffer. 
+;; This production fires only when a blank space is displayed, signaling time for a response.
+;; It sets the goal to respond and also notes that the space has been read. It also preserves
+;; the contents of the visual buffer.
 
 (p parse-screen
 
-    =goal>
-    respond no
-
     =visual>
     type space
+    position =current_span_size
+
+    =goal>
+    - respond yes ;; tmh 08/24 was respond no
+      resp_position nil
+
+
 
     ==>
-    
+  !bind! =testPosition (1+ =current_span_size)
     *goal>
     read yes
-    respond yes
+    respond no
+    resp_position 1
+    last_Position  =testPosition
+
+    !output! (limit set to =testPosition using =current_span_size)
 
     =visual>
     )
 
+
+
+
 ;;-------------------------------------------
-;; Checks and retrieves memory for stimuli in the current position. 
-;; Retains contents of visual buffer. 
+;; Checks and retrieves memory for stimuli in the current position.
+;; Retains contents of visual buffer.
 
 (p check-memory
+
    =visual>
      type space
     ; position =ThisPosition
-     pos-word =ThisPosition
-  
+     ;pos-word =ThisPosition
+
    ?visual>
      state free
 
@@ -209,8 +234,10 @@
 
    =goal>
      read yes
-   respond yes
-
+   - respond yes
+   resp_position =SP1
+   - last_Position =SP1
+   last_Position =LP
    ?retrieval>
      state free
     ;buffer full
@@ -218,30 +245,92 @@
 
   ==>
 
+  !bind! =ThisPosition (return-word =SP1)
+
+  !output! (function modified =SP1 to =ThisPosition)
+  !output! (retrieving =SP1 before last item =LP)
+
    +retrieval>
    isa stimulus
-   pos-word =ThisPosition
+   pos-word  =ThisPosition
    kind wm
    - item nil
 
    =visual>
-   
+
+   *goal>
+     read yes
+   respond yes
+   resp_position =SP1
+   pos-word  =ThisPosition
+
 )
+
+
+
+(p make-response
+
+  ?retrieval>
+   - state error
+
+   =goal>
+   read yes
+   respond yes
+   resp_position =SP1
+   pos-word  =ThisPosition
+
+   =visual>
+   type space
+
+   ?manual>
+    preparation free
+    processor free
+    execution free
+
+   =retrieval>
+     kind wm
+     item =response_key
+     position =SP1
+     pos-word =ThisPosition
+
+  ==>
+
++manual>
+    cmd press-key
+    key =response_key
+
+!bind! =next_resp_position (1+ =SP1)
+
+    *goal>
+    read yes
+    respond no
+   resp_position =next_resp_position
+   ; pos-word  =ThisPosition
+
+   =visual>
+   type space
+
+
+  )
+
+
 
 ;;-------------------------------------------
 ;; If retrieval fails, make a blank response, in this case just 'x'.
 ;; It resets the goal to read the next stimulus
 ;; note: for some reason, sometimes visual buffer isn't cleared and explicitly clearing
-;; visual buffer breaks the model....perhaps because of interface failures. 
+;; visual buffer breaks the model....perhaps because of interface failures.
 
 (p respond-blank
-    
+
     ?retrieval>
     state error
 
     =goal>
      read yes
      respond yes
+     resp_position =SP1
+
 
     =visual>
    type space
@@ -250,241 +339,25 @@
     preparation free
     processor free
     execution free
-   
-    ==>
 
+    ==>
+!bind! =next_resp_position (1+ =SP1)
     +manual>
     cmd press-key
     key x
- 
+
 
   *goal>
-    read no
+    read yes
     respond no
-       
-   ;-visual>
+    resp_position =next_resp_position
+
+   =visual>
+   type space
+
        )
 
-;;-------------------------------------------
-;; If a retrieval is successful, retrieved item is bound to a variable and 
-;; executed via press-key command. There is a production for each serial position. 
-;; There will be a total of 6 make-response production
-
-(p make-response-s1
-   
-  ?retrieval>
-   - state error
-
-   =goal>
-   read yes
-   respond yes
-
-   =visual>
-   type space
-   position 1
-   pos-word one 
-
-   =retrieval>
-     kind wm
-     item =response_key
-     position 1
-     pos-word one 
-   
-   ?manual>
-    preparation free
-    processor free
-    execution free
-
-   ==>
-
-   +manual>
-    cmd press-key
-    key =response_key
-
-    *goal>
-    read no
-    respond no
-
-    )
 
 
-(p make-response-s2
-   
-   =goal>
-   read yes
-   respond yes
-
-   =visual>
-   type space
-   position 2
-   pos-word two 
-
-   =retrieval>
-   kind wm
-   item =response_key
-   position 2
-   pos-word two
-  
-   ?manual>
-    preparation free
-    processor free
-    execution free
-
-   ==>
-
-   +manual>
-    cmd press-key
-    key =response_key
-
-    *goal>
-    read no
-    respond no
-
-    )
-
-(p make-response-s3
-   
-   =goal>
-   read yes
-   respond yes
-
-   =visual>
-   type space
-   position 3
-   pos-word three
-
-   =retrieval>
-   kind wm
-   item =response_key
-   position 3
-   pos-word three
-   
-   ?manual>
-    preparation free
-    processor free
-    execution free
-
-   ==>
-
-   +manual>
-    cmd press-key
-    key =response_key
-
-    *goal>
-    read no
-    respond no
-
-    )
-    
-    (p make-response-s4
-   
-   =goal>
-   read yes
-   respond yes
-
-   =visual>
-   type space
-   position 4
-   pos-word four 
-
-   =retrieval>
-   kind wm
-   item =response_key
-   position 4
-   pos-word four
-   
-    ?manual>
-    preparation free
-    processor free
-    execution free
-
-   ==>
-
-   +manual>
-    cmd press-key
-    key =response_key
-
-    *goal>
-    read no
-    respond no
-
-    )
-    
-(p make-response-s5
-   
-   =goal>
-   read yes
-   respond yes
-
-   =visual>
-   type space
-   position 5
-   pos-word five
-
-   =retrieval>
-   kind wm
-   item =response_key
-   position 5
-   pos-word five
-   
-   ?manual>
-    preparation free
-    processor free
-    execution free
-
-   ==>
-
-   +manual>
-    cmd press-key
-    key =response_key
-
-    *goal>
-    read no
-    respond no
-
-    )
-    
-    (p make-response-s6
-   
-   =goal>
-   read yes
-   respond yes
-
-   =visual>
-   type space
-   position 6
-   pos-word six
-
-
-   =retrieval>
-   kind wm
-   item =response_key
-   position 6
-   pos-word six
-
-   ?manual>
-    preparation free
-    processor free
-    execution free
-
-   ==>
-
-   +manual>
-    cmd press-key
-    key =response_key
-
-    *goal>
-    read no
-    respond no
-
-    )
 
 )
-
-
-
-
-
-
-
-

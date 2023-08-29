@@ -14,15 +14,15 @@ import pandas as pd
 import itertools
 
 
-debug = False
-show_output = False
+debug = True
+show_output = True
 
 #Load model
 
 curr_dir = os.path.dirname(os.path.realpath(__file__))
 
 #actr.load_act_r_model(os.path.join(curr_dir, "Mods_a_la_Andy.lisp"))
-actr.load_act_r_model(os.path.join(curr_dir, "Mods_a_la_Andy.lisp"))#tmh 08/24
+actr.load_act_r_model(os.path.join(curr_dir, "Mods_a_la_Andy_upgrade.lisp"))#tmh 08/24
 actr.load_act_r_code(os.path.join(curr_dir, "Mods_a_la_Andy_Rehearse.lisp"))
 
 #actr.record_history('buffer-trace')
@@ -37,7 +37,6 @@ def present_stim():
     
     if(show_output):
         		print('Presented item: ', stims[i], 'position: ', in_Position[i] )
-    
     if i <= nTrials-1:
 
         chunks = actr.define_chunks(['isa', 'stimulus',
@@ -58,7 +57,7 @@ def present_stim():
 
         else:
         	actr.schedule_event_relative(0.9, 'present_stim')
-       
+        	
 
     i = i + 1
   #  print('from present stim: i= ', i)
@@ -72,20 +71,12 @@ def get_response(model, key ):
 
     if show_output:
         print("Get Response ran")
-    #actr.schedule_event_relative(0, 'present_stim')
-    #print(cr)
+    actr.schedule_event_relative(0, 'present_stim')
+    print(cr)
     current_response[cr] = key
     if show_output:
         print(current_response)
     cr = cr + 1
-
-    if cr == span:
-        last_stim = actr.define_chunks([ 'isa', 'stimulus',
-            'item', 'stop',
-            'type', 'stop']
-            )
-        actr.set_buffer_chunk('visual', last_stim[0])
-
 
     return current_response
 #increase index for next stimulus
@@ -103,7 +94,6 @@ def model_loop():
     global nTrials
     global strategy_used
     global cr
-    global span
    # accuracy = np.repeat(0, nTrials).tolist()
     cr = 0
     #initial goal dm
@@ -119,7 +109,7 @@ def model_loop():
 
     #waits for a key press?
 
-    actr.run(42)
+    actr.run(15)
 
 actr.add_command('present_stim', present_stim, 'presents stimulus')
 #actr.add_command('present_feedback', present_feedback, 'presents feedback')
@@ -133,13 +123,12 @@ if debug:
     i = 0
    
 
-    stims =       ["'4'", "'C'", "'A'", "'1'","'H'", "'T'", "'7'","'E'","'R'","'2'","'D'","'M'","'3'","'L'","'O'","'8'", 'space']#, 'space2', 'space3', 'space4', 'space5', 'space6']
+    stims =       ["'4'", "'C'", "'A'", "'1'","'H'", "'T'", "'7'","'E'","'R'","'2'","'D'","'M'","'5'","'L'","'O'","'8'", 'space1']#, 'space2', 'space3', 'space4', 'space5', 'space6']
     of_Type =     ['digit', 'letter', 'letter', 'digit','letter', 'letter', 'digit','letter', 'letter','digit','letter', 'letter', 'digit','letter', 'letter', 'digit',  'space']#, 'space','space', 'space', 'space','space' ]
     in_Position = ['1', 'nil', 'nil','2', 'nil', 'nil', '3' ,'nil', 'nil','4','nil', 'nil','5','nil', 'nil','6',1]#, 2, 3,4,5,6]
     Pos_word =    ['one', 'nil', 'nil', 'two', 'nil', 'nil', 'three','nil', 'nil', 'four','nil', 'nil','five','nil', 'nil','six','six']#,'five', 'four', 'three','two', 'one' ]
     current_response  = np.repeat(-1, 6).tolist() 
     nTrials = len(stims)
-    span = 6
 
 
 def simulation(nSims, expt, mas):
@@ -149,13 +138,13 @@ def simulation(nSims, expt, mas):
     global i
     global current_response
     global cr
-    global span
+    global span_size
     global corr_responses
     global stims
     global of_Type
     global in_Position
     global Pos_word
-   
+    global rev_resp
     
     span = expt['span_size']
     
@@ -195,10 +184,15 @@ def simulation(nSims, expt, mas):
                 this_position = np.append(this_position, np.repeat('nil', this_len))
                 this_pos_word = np.append(this_pos_word,  np.repeat('nil', this_len))
                 
-        this_stim =     np.append(this_stim,'space')
-        this_type =     np.append(this_type, 'space')
-        this_position = np.append(this_position,span)
-        this_pos_word = np.append(this_pos_word, 'space')
+        this_stim =     np.append(this_stim, space_temp[0:span])
+        this_type =     np.append(this_type, tuple(np.repeat('space', span)))
+        #try reverse
+        rev_pos = position_temp[0:span]
+        rev_pos.reverse()
+        rev_word  = pos_word_temp[0:span]
+        rev_word.reverse()
+        this_position = np.append(this_position,rev_pos )
+        this_pos_word = np.append(this_pos_word, rev_word )
 #----- set up experiment - setup stimuli and properties for presntation to model
 
         nTrials = len(this_stim)
@@ -219,9 +213,10 @@ def simulation(nSims, expt, mas):
         actr.reset()
         
 #----- compute accuracy 
-    
+        rev_resp = current_response
+        rev_resp.reverse()
         
-        resps.loc[0:(span-1), s] = np.array(current_response) == np.array(corr_responses)
+        resps.loc[0:(span-1), s] = np.array(rev_resp) == np.array(corr_responses)
 
     return resps 
 
