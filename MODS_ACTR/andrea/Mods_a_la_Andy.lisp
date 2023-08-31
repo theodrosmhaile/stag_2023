@@ -35,18 +35,19 @@
 
 (sgp
  :esc t
- :ga 1.00
+ :ga 4.00
  :bll 0.5
- :ol t
- :ans 0.14
+ :ol nil
+ :ans .1 ;0.14
  :mp nil
  :dat .180
  :v nil
  :declarative-finst-span 0.5
- ;:act t
- :rt -0.81 ;-0.81 ;-10 ;-10
+ :act t
+ :rt  -0.81 ;-0.81 ;-10 ;-10
  ;:mas 2
- :visual-activation 1
+ ;:visual-activation 1
+ ;:imaginal-activation 2
  )
 
 ;;---------------------------------------------
@@ -106,6 +107,7 @@
     =visual>
     )
 
+;;(spp (read-aloud :at .200))
 
 
 ;;-------------------------------------------
@@ -139,6 +141,7 @@
 (p encode-wm
   =goal>
      read yes
+   
   =visual>
      type digit
      item =D
@@ -158,6 +161,8 @@
     *goal>
     read yes
     clear_wm yes
+    rehearsing 1
+   
  !output! (ndigits =P)
 )
 
@@ -180,7 +185,7 @@
     -imaginal>
 
     *goal>
-
+    
     clear_wm no
     ndigits =N
     rehearsing 1
@@ -204,8 +209,6 @@
     - respond yes ;; tmh 08/24 was respond no
       resp_position nil
 
-
-
     ==>
   !bind! =testPosition (1+ =current_span_size)
     *goal>
@@ -220,7 +223,7 @@
     )
 
 
-
+;;(spp (parse-screen :at 1.56))
 
 ;;-------------------------------------------
 ;; Checks and retrieves memory for stimuli in the current position.
@@ -246,6 +249,7 @@
    resp_position =SP1
    - last_Position =SP1
    last_Position =LP
+  
    ?retrieval>
      state free
     ;buffer full
@@ -320,8 +324,6 @@
 
 
   )
-
-
 
 ;;-------------------------------------------
 ;; If retrieval fails, make a blank response, in this case just 'x'.

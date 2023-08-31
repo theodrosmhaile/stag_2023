@@ -1,7 +1,7 @@
 %% This script plots data from mods
 close all
 clear all
-colormap parula
+%colormap parula
 theseFiles = dir('./behavioral_data_raw/MODS_data/*.mat')  ;
 ser_pos = nan(length(theseFiles), 6);
 span_acc = nan(length(theseFiles), 4);

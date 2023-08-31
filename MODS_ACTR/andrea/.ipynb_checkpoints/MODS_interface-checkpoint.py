@@ -119,7 +119,7 @@ def model_loop():
 
     #waits for a key press?
 
-    actr.run(42)
+    actr.run(45)
 
 actr.add_command('present_stim', present_stim, 'presents stimulus')
 #actr.add_command('present_feedback', present_feedback, 'presents feedback')
