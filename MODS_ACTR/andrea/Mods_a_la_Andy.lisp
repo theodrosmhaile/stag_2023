@@ -223,7 +223,7 @@
     )
 
 
-;;(spp (parse-screen :at 1.56))
+(spp (parse-screen :at 1.56))
 
 ;;-------------------------------------------
 ;; Checks and retrieves memory for stimuli in the current position.

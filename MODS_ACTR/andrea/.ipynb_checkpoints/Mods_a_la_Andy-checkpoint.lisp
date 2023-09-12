@@ -47,7 +47,7 @@
  :rt  -0.81 ;-0.81 ;-10 ;-10
  ;:mas 2
  ;:visual-activation 1
- ;:imaginal-activation 2
+ :imaginal-activation 2
  )
 
 ;;---------------------------------------------
@@ -223,7 +223,7 @@
     )
 
 
-;;(spp (parse-screen :at 1.56))
+(spp (parse-screen :at 1.56))
 
 ;;-------------------------------------------
 ;; Checks and retrieves memory for stimuli in the current position.

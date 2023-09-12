@@ -53,7 +53,7 @@ def present_stim():
             
             if show_output:
                 print('encountered space')
-               # actr.schedule_event_relative(0, 'present_stim')
+                actr.schedule_event_relative(0, 'present_stim')
         			
 
         else:
@@ -119,7 +119,7 @@ def model_loop():
 
     #waits for a key press?
 
-    actr.run(45)
+    actr.run(40)
 
 actr.add_command('present_stim', present_stim, 'presents stimulus')
 #actr.add_command('present_feedback', present_feedback, 'presents feedback')
@@ -146,6 +146,7 @@ def simulation(nSims, expt, mas):
 
     global nTrials
     global resps 
+    global resps_test
     global i
     global current_response
     global cr
@@ -162,7 +163,7 @@ def simulation(nSims, expt, mas):
 #----- set up experiment - initialize variables, these don't change for a set of sims
     
     resps = pd.DataFrame({0:np.repeat('NaN',6)}) #6 is the max number of span items/responses
-    
+    resps_test =[]
     type_temp     = np.repeat('digit', span)
     position_temp = ['1','2', '3', '4', '5', '6']
     letters='A', 'B', 'C'
@@ -216,14 +217,15 @@ def simulation(nSims, expt, mas):
         actr.set_parameter_value(":mas", mas)
     
         model_loop()
-        actr.reset()
+        if show_output==False:
+            actr.reset()
         
 #----- compute accuracy 
     
         
-        resps.loc[0:(span-1), s] = np.array(current_response) == np.array(corr_responses)
-
-    return resps 
+       # resps.loc[0:(span-1), s] = np.array(current_response) == np.array(corr_responses)
+        resps_test.append([np.array(current_response) == np.array(corr_responses)])
+    return resps_test 
 
 
 
